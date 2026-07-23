@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Plus+Jakarta+Sans:wght@500;700&amp;display=swap');
+      .brand-title {
+        font-family: 'Great Vibes', cursive, 'Brush Script MT', sans-serif;
+        font-size: 72px;
+        fill: #6b21a8;
+      }
+      .brand-heart {
+        fill: #c084fc;
+      }
+      .book-line {
+        stroke: #7e22ce;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+      }
+      .flower-fill {
+        fill: #9333ea;
+      }
+      .flower-soft {
+        fill: #a855f7;
+      }
+      .accent-heart {
+        fill: #c084fc;
+      }
+    </style>
+  </defs>
+  
+  <!-- Text Logo -->
+  <g transform="translate(200, 85)" text-anchor="middle">
+    <text class="brand-title" x="-15" y="0">Maristory</text>
+    <path class="brand-heart" d="M 120 -25 C 120 -35 130 -40 138 -32 C 146 -40 156 -35 156 -25 C 156 -12 138 0 138 4 C 138 0 120 -12 120 -25 Z" transform="scale(0.85)" />
+  </g>
+
+  <!-- Open Book with Floral Illustration -->
+  <g transform="translate(100, 120)">
+    <!-- Book Pages Spine & Base -->
+    <path class="book-line" d="M 20 90 C 70 70, 95 80, 100 85 C 105 80, 130 70, 180 90 L 180 110 C 130 90, 105 100, 100 105 C 95 100, 70 90, 20 110 Z" />
+    <path class="book-line" d="M 100 85 L 100 105" />
+    <path class="book-line" d="M 25 96 C 70 78, 95 86, 100 90" />
+    <path class="book-line" d="M 175 96 C 130 78, 105 86, 100 90" />
+
+    <!-- Stems and Leaves sprouting from book -->
+    <path class="book-line" d="M 100 85 Q 100 40 100 20" />
+    <path class="book-line" d="M 100 65 Q 80 45 60 30" />
+    <path class="book-line" d="M 100 65 Q 120 45 140 30" />
+    <path class="book-line" d="M 100 75 Q 70 65 50 55" />
+    <path class="book-line" d="M 100 75 Q 130 65 150 55" />
+
+    <!-- Center Tulip Flower -->
+    <path class="flower-fill" d="M 90 20 C 90 5, 95 0, 100 0 C 105 0, 110 5, 110 20 C 105 18, 102 24, 100 28 C 98 24, 95 18, 90 20 Z" />
+    
+    <!-- Left Tulips & Buds -->
+    <path class="flower-soft" d="M 52 30 C 48 18, 56 12, 62 16 C 66 18, 64 26, 60 32 Z" />
+    <path class="flower-fill" d="M 42 55 C 38 45, 46 40, 52 44 Z" />
+
+    <!-- Right Tulips & Buds -->
+    <path class="flower-soft" d="M 148 30 C 152 18, 144 12, 138 16 C 134 18, 136 26, 140 32 Z" />
+    <path class="flower-fill" d="M 158 55 C 162 45, 154 40, 148 44 Z" />
+
+    <!-- Decorative Leaves -->
+    <path class="book-line" d="M 85 50 C 75 42, 70 46, 80 54 C 88 56, 92 50, 85 50 Z" />
+    <path class="book-line" d="M 115 50 C 125 42, 130 46, 120 54 C 112 56, 108 50, 115 50 Z" />
+  </g>
+</svg>

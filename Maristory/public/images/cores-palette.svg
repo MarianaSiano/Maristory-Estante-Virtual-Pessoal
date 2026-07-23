@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap');
+      .title-brand { font-family: 'Great Vibes', cursive; font-size: 48px; fill: #ffffff; }
+      .header-sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 600; fill: #e1bee7; letter-spacing: 2px; text-transform: uppercase; }
+      .section-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 800; fill: #ffffff; letter-spacing: 1px; }
+      .color-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; fill: #ffffff; }
+      .color-hex { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; fill: #e1bee7; }
+      .color-role { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 400; fill: #ba68c8; }
+      .font-sample-title { font-family: 'Great Vibes', cursive; font-size: 32px; fill: #ba68c8; }
+      .font-sample-body { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 600; fill: #f3e5f5; }
+    </style>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="600" fill="#220042" rx="24"/>
+
+  <!-- Top Header Banner -->
+  <rect x="0" y="0" width="800" height="110" fill="#2e005b" rx="24"/>
+  <rect x="0" y="90" width="800" height="20" fill="#2e005b"/>
+  
+  <g transform="translate(40, 45)">
+    <text class="title-brand" x="0" y="10">Maristory</text>
+    <text class="header-sub" x="190" y="-5">GUIA DE IDENTIDADE VISUAL &amp; CORES</text>
+    <text class="color-role" x="190" y="15">Paleta Oficial de Cores do Sistema de Estante Virtual Privada</text>
+  </g>
+
+  <!-- SECTION 1: SWATCHES GRID (3x3) -->
+  <g transform="translate(40, 140)">
+    <text class="section-title" x="0" y="0">PALETA PRINCIPAL DE ROXOS &amp; LAVANDAS</text>
+
+    <!-- Row 1 -->
+    <!-- Swatch 1: Deep Violet -->
+    <g transform="translate(0, 20)">
+      <rect width="226" height="75" fill="#220042" rx="12" stroke="#3d0075" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#220042" rx="8" stroke="#ba68c8" stroke-width="1.5"/>
+      <text class="color-name" x="72" y="32">Deep Violet</text>
+      <text class="color-hex" x="72" y="48">#220042</text>
+      <text class="color-role" x="72" y="62">Fundo Principal (Dark Canvas)</text>
+    </g>
+
+    <!-- Swatch 2: Midnight Purple -->
+    <g transform="translate(246, 20)">
+      <rect width="226" height="75" fill="#2e005b" rx="12" stroke="#3d0075" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#2e005b" rx="8" stroke="#ba68c8" stroke-width="1.5"/>
+      <text class="color-name" x="72" y="32">Midnight Purple</text>
+      <text class="color-hex" x="72" y="48">#2E005B</text>
+      <text class="color-role" x="72" y="62">Cards &amp; Painéis Elevados</text>
+    </g>
+
+    <!-- Swatch 3: Royal Purple -->
+    <g transform="translate(492, 20)">
+      <rect width="226" height="75" fill="#3d0075" rx="12" stroke="#6317a8" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#3d0075" rx="8" stroke="#ba68c8" stroke-width="1.5"/>
+      <text class="color-name" x="72" y="32">Royal Purple</text>
+      <text class="color-hex" x="72" y="48">#3D0075</text>
+      <text class="color-role" x="72" y="62">Bordas &amp; Divisores</text>
+    </g>
+
+    <!-- Row 2 -->
+    <!-- Swatch 4: Vibrant Purple -->
+    <g transform="translate(0, 110)">
+      <rect width="226" height="75" fill="#2e005b" rx="12" stroke="#3d0075" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#6317a8" rx="8"/>
+      <text class="color-name" x="72" y="32">Vibrant Purple</text>
+      <text class="color-hex" x="72" y="48">#6317A8</text>
+      <text class="color-role" x="72" y="62">Gradientes &amp; Destaques</text>
+    </g>
+
+    <!-- Swatch 5: Primary Purple -->
+    <g transform="translate(246, 110)">
+      <rect width="226" height="75" fill="#2e005b" rx="12" stroke="#3d0075" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#7b1fa2" rx="8"/>
+      <text class="color-name" x="72" y="32">Primary Purple</text>
+      <text class="color-hex" x="72" y="48">#7B1FA2</text>
+      <text class="color-role" x="72" y="62">Botões Primários &amp; Ações</text>
+    </g>
+
+    <!-- Swatch 6: Rich Violet -->
+    <g transform="translate(492, 110)">
+      <rect width="226" height="75" fill="#2e005b" rx="12" stroke="#3d0075" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#8e24aa" rx="8"/>
+      <text class="color-name" x="72" y="32">Rich Violet</text>
+      <text class="color-hex" x="72" y="48">#8E24AA</text>
+      <text class="color-role" x="72" y="62">Estados de Hover &amp; Foco</text>
+    </g>
+
+    <!-- Row 3 -->
+    <!-- Swatch 7: Lavender Accent -->
+    <g transform="translate(0, 200)">
+      <rect width="226" height="75" fill="#2e005b" rx="12" stroke="#3d0075" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#ba68c8" rx="8"/>
+      <text class="color-name" x="72" y="32">Lavender Accent</text>
+      <text class="color-hex" x="72" y="48">#BA68C8</text>
+      <text class="color-role" x="72" y="62">Ícones &amp; Badges Destaque</text>
+    </g>
+
+    <!-- Swatch 8: Soft Lavender -->
+    <g transform="translate(246, 200)">
+      <rect width="226" height="75" fill="#2e005b" rx="12" stroke="#3d0075" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#e1bee7" rx="8"/>
+      <text class="color-name" x="72" y="32">Soft Lavender</text>
+      <text class="color-hex" x="72" y="48">#E1BEE7</text>
+      <text class="color-role" x="72" y="62">Textos Secundários</text>
+    </g>
+
+    <!-- Swatch 9: Light Rose Lavender -->
+    <g transform="translate(492, 200)">
+      <rect width="226" height="75" fill="#2e005b" rx="12" stroke="#3d0075" stroke-width="2"/>
+      <rect x="15" y="15" width="45" height="45" fill="#f3e5f5" rx="8"/>
+      <text class="color-name" x="72" y="32">Light Lavender</text>
+      <text class="color-hex" x="72" y="48">#F3E5F5</text>
+      <text class="color-role" x="72" y="62">Textos Principais (Light)</text>
+    </g>
+  </g>
+
+  <!-- SECTION 2: TYPOGRAPHY & BRAND ASSETS -->
+  <g transform="translate(40, 440)">
+    <!-- Box 1: Typography -->
+    <rect x="0" y="0" width="350" height="120" fill="#2e005b" rx="16" stroke="#3d0075" stroke-width="2"/>
+    <text class="section-title" x="20" y="30">TIPOGRAFIA OFICIAL</text>
+    <text class="font-sample-title" x="20" y="70">Great Vibes (Títulos)</text>
+    <text class="font-sample-body" x="20" y="100">Plus Jakarta Sans (Interface &amp; Corpo)</text>
+
+    <!-- Box 2: Logo Previews -->
+    <rect x="370" y="0" width="348" height="120" fill="#2e005b" rx="16" stroke="#3d0075" stroke-width="2"/>
+    <text class="section-title" x="20" y="30" transform="translate(370, 0)">MARISTORY ASSETS</text>
+    <g transform="translate(390, 45)">
+      <rect width="150" height="55" fill="#ffffff" rx="8"/>
+      <text font-family="'Great Vibes', cursive" font-size="28" fill="#6b21a8" x="12" y="38">Maristory</text>
+    </g>
+    <g transform="translate(555, 45)">
+      <rect width="145" height="55" fill="#220042" rx="8" stroke="#3d0075" stroke-width="1.5"/>
+      <text font-family="'Great Vibes', cursive" font-size="28" fill="#e1bee7" x="12" y="38">Maristory</text>
+    </g>
+  </g>
+</svg>

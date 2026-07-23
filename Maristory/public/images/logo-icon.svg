@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg-rect { fill: #2e005b; rx: 40px; }
+      .book-line { stroke: #e1bee7; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+      .flower-fill { fill: #ba68c8; }
+      .flower-soft { fill: #f3e5f5; }
+      .heart-accent { fill: #ba68c8; }
+    </style>
+  </defs>
+  
+  <rect class="bg-rect" width="200" height="200"/>
+  
+  <!-- Open Book with Floral Illustration -->
+  <g transform="translate(0, 10)">
+    <!-- Book Pages Spine & Base -->
+    <path class="book-line" d="M 30 130 C 70 110, 95 120, 100 125 C 105 120, 130 110, 170 130 L 170 150 C 130 130, 105 140, 100 145 C 95 140, 70 130, 30 150 Z" />
+    <path class="book-line" d="M 100 125 L 100 145" />
+
+    <!-- Stems and Leaves sprouting from book -->
+    <path class="book-line" d="M 100 125 Q 100 80 100 50" />
+    <path class="book-line" d="M 100 100 Q 80 80 60 60" />
+    <path class="book-line" d="M 100 100 Q 120 80 140 60" />
+
+    <!-- Center Tulip Flower -->
+    <path class="flower-fill" d="M 90 50 C 90 35, 95 30, 100 30 C 105 30, 110 35, 110 50 C 105 48, 102 54, 100 58 C 98 54, 95 48, 90 50 Z" />
+    
+    <!-- Left Tulips -->
+    <path class="flower-soft" d="M 52 60 C 48 48, 56 42, 62 46 C 66 48, 64 56, 60 62 Z" />
+
+    <!-- Right Tulips -->
+    <path class="flower-soft" d="M 148 60 C 152 48, 144 42, 138 46 C 134 48, 136 56, 140 62 Z" />
+
+    <!-- Heart Floating Top -->
+    <path class="heart-accent" d="M 100 12 C 100 5, 106 2, 111 6 C 116 2, 122 5, 122 12 C 122 18, 111 23, 111 25 C 111 23, 100 18, 100 12 Z" transform="translate(-11, 2) scale(1.1)"/>
+  </g>
+</svg>
