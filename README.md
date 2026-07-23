@@ -15,8 +15,7 @@
   <a href="#-recursos-principais">Recursos</a> •
   <a href="#-arquitetura--tecnologias">Arquitetura & Tech</a> •
   <a href="#-como-iniciar-um-projeto-do-zero-em-tsx-react--typescript">Guia TSX do Zero</a> •
-  <a href="#-instruções-para-execução-do-maristory">Como Rodar</a> •
-  <a href="#-contas-de-teste">Contas de Teste</a>
+  <a href="#-instruções-para-execução-do-maristory">Como Rodar</a>
 </p>
 
 ---
