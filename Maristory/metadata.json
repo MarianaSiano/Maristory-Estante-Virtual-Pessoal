@@ -1,0 +1,8 @@
+{
+    "name": "Maristory",
+    "description": "Sistema de estante virtual pessoal e catalogação de leituras inspirado no Skoob, com gestão de acervo pelo administrador e estantes individuais para usuários.",
+    "requestFramePermissions": [],
+    "majorCapabilities": [
+        "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+    ]
+}
