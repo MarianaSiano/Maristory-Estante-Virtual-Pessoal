@@ -18,5 +18,5 @@ import {
     updateUserProfile,
     resetPasswordByEmail,
     verifyToken
-} from './server/db.js';
-import { UserRole } from './src/types.js';
+} from './server/db.ts';
+import { UserRole } from './src/types.ts';
