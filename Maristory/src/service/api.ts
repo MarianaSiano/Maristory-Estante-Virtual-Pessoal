@@ -30,3 +30,28 @@ export function clearAuthData(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
 }
+
+async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const token = getStoredToken();
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(options.headers as Record<string, string> || {}),
+    };
+
+    if(token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch (endpoint, {
+        ...options,
+        headers,
+    });
+
+    const data = await response.json();
+
+    if(!response.ok) {
+        throw new Error(data.error || 'Ocorreu um erro ao comunicar com o servidor.');
+    }
+
+    return data as T;
+}
