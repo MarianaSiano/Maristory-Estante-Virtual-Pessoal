@@ -44,7 +44,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch (endpoint, {
+    const response = await fetch(endpoint, {
         ...options,
         headers,
     });
@@ -77,7 +77,7 @@ export const api = {
     },
 
     async login(email: string, pass: string): Promise<AuthResponse> {
-        const res = await apiFetch<AuthResponse> ('/api/auth/login', {
+        const res = await apiFetch<AuthResponse>('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password: pass },)
         });
@@ -120,5 +120,52 @@ export const api = {
 
     async getBookById(id: string): Promise<Book> {
         return apiFetch<Book>(`/api/books/${id}`);
+    },
+
+    // Admin Catalog Management
+    async createBook(book: Omit<Book, 'id' | 'createdBy' | 'createdAt'>): Promise<Book> {
+        return apiFetch<Book>('/api/admin/books', {
+            method: 'POST',
+            body: JSON.stringify(book),
+        });
+    },
+
+    async updateBook(id: string, updates: Partial<Book>): Promise<Book> {
+        return apiFetch<Book>(`/api/admin/books/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(updates),
+        });
+    },
+
+    async deleteBook(id: string): Promise<{ success: boolean; message: string }> {
+        return apiFetch<{ success: boolean; message: string }>(`/api/admin/books/${id}`, {
+            method: 'DELETE',
+        });
+    },
+
+    // User Bookshelf
+    async getUserBookshelf(): Promise<BookshelfItem[]> {
+        return apiFetch<BookshelfItem[]>('/api/user/bookshelf');
+    },
+
+    async updateBookshelfItem(bookId: string, itemData: Partial<BookshelfItem>): Promise<BookshelfItem> {
+        return apiFetch<BookshelfItem>(`/api/user/bookshelf/${bookId}`, {
+            method: 'POST',
+            body: JSON.stringify(itemData),
+        });
+    },
+
+    async removeFromBookshelf(bookId: string): Promise<{ success: boolean; message: string }> {
+        return apiFetch<{ success: boolean; message: string }>(`/api/user/bookshelf/${bookId}`, {
+            method: 'DELETE',
+        });
+    },
+
+    async getUserStats(): Promise<ReadingStats> {
+        return apiFetch<ReadingStats>('/api/user/stats');
+    },
+
+    async getAdminStats(): Promise<AdminCatalogStats> {
+        return apiFetch<AdminCatalogStats>('/api/admin/stats');
     }
 }
