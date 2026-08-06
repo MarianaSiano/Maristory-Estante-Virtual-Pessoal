@@ -38,3 +38,68 @@ function generateColorSwatchSvg(hex, label, role) {
         <text x="256" y="320" font-family="sans-serif" font-size="18" fill="${subColor}" text-anchor="middle" opacity="0.8">${role}</text>
     </svg>`;
 }
+
+// Generate Color Swatch PNGs
+console.log('Generating color palette PNGs...');
+for(const swatch of colorSwatches) {
+    const svg = generateColorSwatchSvg(swatch.hex, swatch.label, swatch.role);
+    const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 512 } });
+    const pngBuffer = resvg.render().asPng();
+    const filePath = path.join(publicImagesDir, swatch.name);
+    fs.writeFileSync(filePath, pngBuffer);
+    console.log(`✅ Swatch created: ${swatch.name}`);
+}
+
+// Generate Logos (Com Fundo and Fundo Transparente)
+const logoWithBgSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="800" height="300">
+    <defs>
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Plus+Jakarta+Sans:wght@600&amp;display=swap');
+        .title { font-family: 'Great Vibes', cursive; font-size: 110px; fill: #ffffff; }
+        .sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; fill: #e1bee7; letter-spacing: 4px; text-transform: uppercase; }
+        </style>
+    </defs>
+    <rect width="800" height="300" fill="#220042" rx="32"/>
+    <rect x="16" y="16" width="768" height="268" fill="none" stroke="#3d0075" stroke-width="3" rx="24"/>
+    <g transform="translate(80, 160)">
+        <path d="M 0 30 C 25 15, 45 22, 50 25 C 55 22, 75 15, 100 30 L 100 45 C 75 30, 55 37, 50 40 C 45 37, 25 30, 0 45 Z" fill="none" stroke="#e1bee7" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 50 25 L 50 40" stroke="#e1bee7" stroke-width="3"/>
+        <path d="M 50 25 Q 50 -10 50 -35" stroke="#e1bee7" stroke-width="3" fill="none"/>
+        <path d="M 50 -10 Q 35 -25 20 -40" stroke="#e1bee7" stroke-width="2" fill="none"/>
+        <path d="M 50 -10 Q 65 -25 80 -40" stroke="#e1bee7" stroke-width="2" fill="none"/>
+        <path d="M 42 -35 C 42 -48, 46 -52, 50 -52 C 54 -52, 58 -48, 58 -35 Z" fill="#ba68c8"/>
+        <path d="M 12 -40 C 8 -50, 15 -55, 20 -52 C 24 -50, 22 -43, 18 -38 Z" fill="#e1bee7"/>
+        <path d="M 88 -40 C 92 -50, 85 -55, 80 -52 C 76 -50, 78 -43, 82 -38 Z" fill="#e1bee7"/>
+    </g>
+    <text class="title" x="220" y="170">Maristory</text>
+    <text class="sub" x="225" y="215">ESTANTE VIRTUAL PESSOAL</text>
+</svg>`;
+
+const logoTransparentSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="800" height="300">
+    <defs>
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Plus+Jakarta+Sans:wght@600&amp;display=swap');
+        .title { font-family: 'Great Vibes', cursive; font-size: 110px; fill: #6b21a8; }
+        .sub { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; fill: #7b1fa2; letter-spacing: 4px; text-transform: uppercase; }
+        </style>
+    </defs>
+    <g transform="translate(80, 160)">
+        <path d="M 0 30 C 25 15, 45 22, 50 25 C 55 22, 75 15, 100 30 L 100 45 C 75 30, 55 37, 50 40 C 45 37, 25 30, 0 45 Z" fill="none" stroke="#7b1fa2" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 50 25 L 50 40" stroke="#7b1fa2" stroke-width="3"/>
+        <path d="M 50 25 Q 50 -10 50 -35" stroke="#7b1fa2" stroke-width="3" fill="none"/>
+        <path d="M 50 -10 Q 35 -25 20 -40" stroke="#7b1fa2" stroke-width="2" fill="none"/>
+        <path d="M 50 -10 Q 65 -25 80 -40" stroke="#7b1fa2" stroke-width="2" fill="none"/>
+        <path d="M 42 -35 C 42 -48, 46 -52, 50 -52 C 54 -52, 58 -48, 58 -35 Z" fill="#8e24aa"/>
+        <path d="M 12 -40 C 8 -50, 15 -55, 20 -52 C 24 -50, 22 -43, 18 -38 Z" fill="#ba68c8"/>
+        <path d="M 88 -40 C 92 -50, 85 -55, 80 -52 C 76 -50, 78 -43, 82 -38 Z" fill="#ba68c8"/>
+    </g>
+    <text class="title" x="220" y="170">Maristory</text>
+    <text class="sub" x="225" y="215">ESTANTE VIRTUAL PESSOAL</text>
+</svg>`;
+
+console.log('Generating Logos for "Com Fundo" and "Fundo Transparente"...');
+
+const renderPng = (svg, width = 800) => {
+    const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: width } });
+    return resvg.render().asPng();
+};
