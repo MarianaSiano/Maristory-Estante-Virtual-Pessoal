@@ -55,3 +55,52 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 
     return data as T;
 }
+
+export const api = {
+    // Auth
+    async register(name: string, email: string, pass: string): Promise<AuthResponse> {
+        const res = await apiFetch<AuthResponse>('/api/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ name, email, password: pass }),
+        });
+        saveAuthData(res.token, res.user);
+        return res;
+    },
+
+    async forgotPassword(email: string, newPassword?: string): Promise<{ message: string }> {
+        return await apiFetch<{ message: string }>('/api/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email, newPassword }),
+        });
+    },
+
+    async login(email: string, pass: string): Promise<AuthResponse> {
+        const res = await apiFetch<AuthResponse> ('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password: pass },)
+        });
+        saveAuthData(res.token, res.user);
+        return res;
+    },
+
+    async getCurrentUser(): Promise<User> {
+        const res = await apiFetch<{ user: User }>('/api/auth/me');
+        saveAuthData(getStoredToken() || '', res.user);
+        return res.user;
+    },
+
+    async updateProfile(data: {
+        name?: string;
+        email?: string;
+        avatarUrl?: string;
+        currentPassword?: string;
+        newPassword?: string;
+    }): Promise<User> {
+        const res = await apiFetch<{ user: User; message: string }>('/api/user/profile', {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+        saveAuthData(getStoredToken() || '', res.user);
+        return res.user;
+    },
+}
