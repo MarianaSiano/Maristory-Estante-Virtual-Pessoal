@@ -1,5 +1,7 @@
+import { Search } from 'lucide-react';
 import { json } from 'node:stream/consumers';
 import { User, Book, BookshelfItem, ReadingStats, AdminCatalogStats, AuthResponse } from '../types.js';
+import { getBookById } from '@/server/db.js';
 
 const TOKEN_KEY = 'maristory_auth_token';
 const USER_KEY = 'maristory_user_data';
@@ -103,4 +105,20 @@ export const api = {
         saveAuthData(getStoredToken() || '', res.user);
         return res.user;
     },
+
+    // Catalog
+    async getBooks(search?: string, genre?: string): Promise<Book[]> {
+        const query = new URLSearchParams();
+        if(search)
+            query.append('search', search);
+
+        if(genre)
+            query.append('genre', genre);
+
+        return apiFetch<Book[]>(`/api/books?${query.toString()}`);
+    },
+
+    async getBookById(id: string): Promise<Book> {
+        return apiFetch<Book>(`/api/books/${id}`);
+    }
 }
