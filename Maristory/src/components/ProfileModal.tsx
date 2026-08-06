@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User } from '../types.js';
-import { api } from '../services/api.ts';
+import { api } from '../service/api.ts';
 import {
     X,
     User as UserIcon,

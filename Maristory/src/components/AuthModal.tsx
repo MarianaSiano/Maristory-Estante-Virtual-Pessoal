@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { api } from '../services/api.ts';
+import { api } from '../service/api.ts';
 import { User } from '../types.js';
 import { X, Lock, Mail, User as UserIcon, ShieldCheck, Sparkles, AlertCircle, Eye, EyeOff, CheckCircle2, KeyRound, ArrowLeft } from 'lucide-react';
 

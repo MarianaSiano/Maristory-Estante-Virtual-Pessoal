@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ReadingStats, User } from '../types.js';
-import { api } from '../services/api.ts';
+import { api } from '../service/api.ts';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface StatsViewProps {
