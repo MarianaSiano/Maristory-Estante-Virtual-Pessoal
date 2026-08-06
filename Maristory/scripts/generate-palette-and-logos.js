@@ -103,3 +103,16 @@ const renderPng = (svg, width = 800) => {
     const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: width } });
     return resvg.render().asPng();
 };
+
+const bgPng = renderPng(logoWithBgSvg);
+const transPng = renderPng(logoTransparentSvg);
+
+// Write to Com Fundo
+fs.writeFileSync(path.join(logosComFundoDir, 'Maristory - Com Fundo.png'), bgPng);
+fs.writeFileSync(path.join(logosComFundoDir, 'Maristory.png'), bgPng);
+
+// Write to Fundo Transparente
+fs.writeFileSync(path.join(logosFundoTransparenteDir, 'Maristory - Fundo Transparente.png'), transPng);
+fs.writeFileSync(path.join(logosFundoTransparenteDir, 'Maristory -- Fundo Transparente.png'), transPng);
+
+console.log('✅ Logo images created in logos/Com Fundo and logos/Fundo Transparente');
