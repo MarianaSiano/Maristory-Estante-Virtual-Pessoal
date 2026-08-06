@@ -24,3 +24,17 @@ const colorSwatches = [
     { name: 'Bright Lilac.png', hex: '#BA68C8', label: 'Bright Lilac', role: 'Lavender Accent' },
     { name: 'Mauve.png', hex: '#E1BEE7', label: 'Mauve', role: 'Soft Lavender' },
 ];
+
+function generateColorSwatchSvg(hex, label, role) {
+    const isDark = ['#220042', '#2E005B', '#3D0075', '#6317A8', '#7B1FA2'].includes(hex);
+    const textColor = isDark ? '#FFFFFF' : '#220042';
+    const subColor = isDark ? '#E1BEE7' : '#3D0075';
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+        <rect width="512" height="512" fill="${hex}" rx="48"/>
+        <rect x="24" y="24" width="464" height="464" fill="none" stroke="${subColor}" stroke-width="4" rx="36" opacity="0.4"/>
+        <text x="256" y="230" font-family="sans-serif" font-size="32" font-weight="bold" fill="${textColor}" text-anchor="middle">${label}</text>
+        <text x="256" y="280" font-family="sans-serif" font-size="24" font-weight="600" fill="${subColor}" text-anchor="middle">${hex}</text>
+        <text x="256" y="320" font-family="sans-serif" font-size="18" fill="${subColor}" text-anchor="middle" opacity="0.8">${role}</text>
+    </svg>`;
+}
