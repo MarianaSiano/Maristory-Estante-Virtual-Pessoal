@@ -26,6 +26,7 @@ dist-ssr
 node_modules/
 build/
 dist/
+data/
 coverage/
 .DS_Store
 *.log
