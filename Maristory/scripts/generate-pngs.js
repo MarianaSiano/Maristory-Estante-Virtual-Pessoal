@@ -29,10 +29,10 @@ const tasks = [
 
 console.log('Generating PNG brand images across all public structure directories...');
 
-for (const task of tasks) {
+for(const task of tasks) {
     const svgPath = path.join(brandingDir, task.input);
 
-    if (!fs.existsSync(svgPath)) {
+    if(!fs.existsSync(svgPath)) {
         console.error(`SVG file not found: ${svgPath}`);
         continue;
     }
@@ -48,8 +48,8 @@ for (const task of tasks) {
     const pngData = resvg.render();
     const pngBuffer = pngData.asPng();
 
-    for (const outputName of task.outputs) {
-        for (const dir of targetDirs) {
+    for(const outputName of task.outputs) {
+        for(const dir of targetDirs) {
             const targetPath = path.join(dir, outputName);
             fs.writeFileSync(targetPath, pngBuffer);
         }
@@ -67,9 +67,9 @@ const staticFiles = [
     'palette.json'
 ];
 
-for (const file of staticFiles) {
+for(const file of staticFiles) {
     const srcPath = path.join(brandingDir, file);
-    if (fs.existsSync(srcPath)) {
+    if(fs.existsSync(srcPath)) {
         for (const dir of targetDirs) {
             const destPath = path.join(dir, file);
             fs.copyFileSync(srcPath, destPath);
