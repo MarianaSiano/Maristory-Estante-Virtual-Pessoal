@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'USER';
+export type UserRole = 'ADMIN';
 
 export interface User {
     id: string;
@@ -6,8 +6,13 @@ export interface User {
     email: string;
     role: UserRole;
     avatarUrl?: string;
-    createdAt: string;
+    readingGoal?: number;
+    createAt: string;
 }
+
+export type OwnershipStatus = 'TENHO' | 'NAO_TENHO';
+
+export type ReadingStatus = 'LENDO' | 'LIDO' | 'QUERO_LER' | 'ABANDONOU';
 
 export interface Book {
     id: string;
@@ -20,29 +25,19 @@ export interface Book {
     synopsis: string;
     isbn: string;
     coverUrl: string;
-    createdBy: string;
-    createdAt: string;
-}
-
-export type OwnershipStatus = 'TENHO' | 'NAO_TENHO';
-
-export type ReadingStatus = 'LENDO' | 'LIDO' | 'QUERO_LER' | 'ABANDONOU';
-
-export interface BookshelfItem {
-    id: string;
-    userId: string;
-    bookId: string;
-    book?: Book;
     ownershipStatus: OwnershipStatus;
     readingStatus: ReadingStatus;
     rating: number; // 0 to 5
-    review: string;
+    review: string; // notas particulares e impressões da proprietária
     currentPage: number;
     startDate: string | null;
     finishDate: string | null;
     isFavorite: boolean;
+    createdAt: string;
     updatedAt: string;
 }
+
+export type BookshelfItem = Book;
 
 export interface AuthResponse {
     token: string;
@@ -58,17 +53,17 @@ export interface ReadingStats {
     abandoned: number;
     ownedBooks: number;
     averageRating: number;
+    readingGoal: number;
     topGenres: { genre: string; count: number }[];
     monthlyReadCounts: number[]; // 12 months (Jan..Dez)
     longestBook: { title: string; author: string; pages: number; coverUrl: string } | null;
     shortestBook: { title: string; author: string; pages: number; coverUrl: string } | null;
-    mostPopularBook: { title: string; author: string; readersCount: number; coverUrl: string } | null;
-    leastPopularBook: { title: string; author: string; readersCount: number; coverUrl: string } | null;
+    highestRatedBook: { title: string; author: string; rating: number; coverUrl: string } | null;
 }
 
-export interface AdminCatalogStats {
-    totalCatalogBooks: number;
-    totalUsersCount: number;
-    genresCount: number;
-    totalShelfEntries: number;
+export interface LibraryBackup {
+    exportDate: string;
+    owner: string;
+    totalBooks: number;
+    books: Book[];
 }
