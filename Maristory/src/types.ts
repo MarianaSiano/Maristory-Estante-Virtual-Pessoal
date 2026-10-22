@@ -7,7 +7,7 @@ export interface User {
     role: UserRole;
     avatarUrl?: string;
     readingGoal?: number;
-    createAt: string;
+    createdAt: string;
 }
 
 export type OwnershipStatus = 'TENHO' | 'NAO_TENHO';
