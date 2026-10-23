@@ -1,7 +1,4 @@
-import { Search } from 'lucide-react';
-import { json } from 'node:stream/consumers';
-import { User, Book, BookshelfItem, ReadingStats, AdminCatalogStats, AuthResponse } from '../types.js';
-import { getBookById } from '@/server/db.js';
+import { User, Book, ReadingStats, AuthResponse, LibraryBackup } from '../types';
 
 const TOKEN_KEY = 'maristory_auth_token';
 const USER_KEY = 'maristory_user_data';
@@ -12,7 +9,6 @@ export function getStoredToken(): string | null {
 
 export function getStoredUser(): User | null {
     const data = localStorage.getItem(USER_KEY);
-
     if(!data)
         return null;
 
@@ -52,7 +48,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
     const data = await response.json();
 
     if(!response.ok) {
-        throw new Error(data.error || 'Ocorreu um erro ao comunicar com o servidor.');
+        throw new Error(data.error || 'Ocorreu um erro ao comunicar com a biblioteca particular.');
     }
 
     return data as T;
@@ -60,10 +56,18 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 
 export const api = {
     // Auth
-    async register(name: string, email: string, pass: string): Promise<AuthResponse> {
-        const res = await apiFetch<AuthResponse>('/api/auth/register', {
+    async login(email: string, pass: string): Promise<AuthResponse> {
+        const res = await apiFetch<AuthResponse>('/api/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ name, email, password: pass }),
+            body: JSON.stringify({ email, password: pass }),
+        });
+        saveAuthData(res.token, res.user);
+        return res;
+    },
+
+    async ownerDirectAccess(): Promise<AuthResponse> {
+        const res = await apiFetch<AuthResponse>('/api/auth/owner-acess', {
+            method: 'POST',
         });
         saveAuthData(res.token, res.user);
         return res;
@@ -76,18 +80,13 @@ export const api = {
         });
     },
 
-    async login(email: string, pass: string): Promise<AuthResponse> {
-        const res = await apiFetch<AuthResponse>('/api/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password: pass },)
-        });
-        saveAuthData(res.token, res.user);
-        return res;
-    },
-
     async getCurrentUser(): Promise<User> {
         const res = await apiFetch<{ user: User }>('/api/auth/me');
-        saveAuthData(getStoredToken() || '', res.user);
+        const existingToken = getStoredToken();
+
+        if(existingToken) {
+            saveAuthData(existingToken, res.user);
+        }
         return res.user;
     },
 
@@ -95,6 +94,7 @@ export const api = {
         name?: string;
         email?: string;
         avatarUrl?: string;
+        readingGoal?: string;
         currentPassword?: string;
         newPassword?: string;
     }): Promise<User> {
@@ -102,70 +102,79 @@ export const api = {
             method: 'PUT',
             body: JSON.stringify(data),
         });
-        saveAuthData(getStoredToken() || '', res.user);
+        const existingToken = getStoredToken() || '';
+        saveAuthData(existingToken, res.user);
         return res.user;
     },
 
-    // Catalog
-    async getBooks(search?: string, genre?: string): Promise<Book[]> {
+    //Library Books
+    async getBooks(options?: {
+        search?: string;
+        genre?: string;
+        status?: string;
+        ownership?: string;
+    }): Promise<Book[]> {
         const query = new URLSearchParams();
-        if(search)
-            query.append('search', search);
+        if(options?.search)
+            query.append('search', options.search);
 
-        if(genre)
-            query.append('genre', genre);
+        if(options?.genre && options.genre !== 'Todos')
+            query.append('genre', options.genre);
 
-        return apiFetch<Book[]>(`/api/books?${query.toString()}`);
+        if(options?.status && options.status !== 'ALL')
+            query.append('status', options.status);
+
+        if(options?.ownership && options.ownership !== 'ALL')
+            query.append('ownership', options.ownership);
+
+        const queryString = query.toString();
+        return apiFetch<Book[]>(`/api/books${queryString ? `?${queryString}` : ''}`);
     },
 
-    async getBookById(id: string): Promise<Book> {
+    async getBookId(id: string): Promise<Book> {
         return apiFetch<Book>(`/api/books/${id}`);
     },
 
-    // Admin Catalog Management
-    async createBook(book: Omit<Book, 'id' | 'createdBy' | 'createdAt'>): Promise<Book> {
-        return apiFetch<Book>('/api/admin/books', {
+    async createBook(book: Partial<Book>): Promise<Book> {
+        return apiFetch<Book>('/api/books', {
             method: 'POST',
             body: JSON.stringify(book),
         });
     },
 
     async updateBook(id: string, updates: Partial<Book>): Promise<Book> {
-        return apiFetch<Book>(`/api/admin/books/${id}`, {
+        return apiFetch<Book>(`/api/books/${id}`, {
             method: 'PUT',
             body: JSON.stringify(updates),
         });
     },
 
     async deleteBook(id: string): Promise<{ success: boolean; message: string }> {
-        return apiFetch<{ success: boolean; message: string }>(`/api/admin/books/${id}`, {
-            method: 'DELETE',
+        return apiFetch<{ success: boolean; message: string }>(`/api/books/${id}`, {
+            method: 'DELETE'
         });
     },
 
-    // User Bookshelf
-    async getUserBookshelf(): Promise<BookshelfItem[]> {
-        return apiFetch<BookshelfItem[]>('/api/user/bookshelf');
+    // Aliases for compatibility
+    async getUserBookshelf(): Promise<Book[]> {
+        return this.getBooks();
     },
 
-    async updateBookshelfItem(bookId: string, itemData: Partial<BookshelfItem>): Promise<BookshelfItem> {
-        return apiFetch<BookshelfItem>(`/api/user/bookshelf/${bookId}`, {
-            method: 'POST',
-            body: JSON.stringify(itemData),
-        });
+    async updateBookshelfItem(bookId: string, itemData: Partial<Book>): Promise<Book> {
+        return this.updateBook(bookId, itemData);
     },
 
     async removeFromBookshelf(bookId: string): Promise<{ success: boolean; message: string }> {
-        return apiFetch<{ success: boolean; message: string }>(`/api/user/bookshelf/${bookId}`, {
-            method: 'DELETE',
-        });
+        return this.deleteBook(bookId);
     },
 
+    // Personal Reading Stats
     async getUserStats(): Promise<ReadingStats> {
         return apiFetch<ReadingStats>('/api/user/stats');
     },
 
-    async getAdminStats(): Promise<AdminCatalogStats> {
-        return apiFetch<AdminCatalogStats>('/api/admin/stats');
+    // Export Backup
+    async getBackup(): Promise<LibraryBackup> {
+        return apiFetch<LibraryBackup>('/api/library/backup');
     }
-}
+};
