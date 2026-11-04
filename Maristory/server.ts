@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react';
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -17,6 +18,7 @@ import {
     exportLibraryBackup
 } from './server/db.js';
 import { error } from 'console';
+import { AnyTlsaRecord } from 'dns';
 
 interface AuthenticatedRequest extends Request {
     userId?: string;
@@ -129,4 +131,117 @@ async function startServer() {
     });
 
     // Owner: Update profile & reading goals
+    app.put('/api/user/profile', requireOwnerAuth, (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const updateUser = updateOwnerProfile(req.body);
+            return res.json({ user: updateUser, message: 'Perfil da proprietária atualizado com sucesso.' });
+        } catch(err: any) {
+            return res.status(400).json({ error: err.message || 'Erro ao atualizar perfil.' });
+        }
+    });
+
+    // Books: List all books in the private library
+    app.get('/api/books', (req: Request, res: Response) => {
+        const search = req.query.search as string | undefined;
+        const genre = req.query.genre as string | undefined;
+        const status = req.query.status as string | undefined;
+        const ownership = req.query.ownership as string | undefined;
+        const books = getLibraryBooks({ search, genre, status, ownership });
+        res.json(books);
+    });
+
+    // Books: Get single book by ID
+    app.get('/api/bools/:id', (req: Request, res: Response) => {
+        const book = getBookById(req.params.id as string);
+        if(!book) {
+            return res.status(404).json({ error: 'Livro não encontrado na biblioteca.' });
+        }
+        res.json(book);
+    });
+
+    // Books: add new book to the private library
+    app.post('/api/books', requireOwnerAuth, (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const newBook = createLibraryBook(req.body);
+        } catch(err: any) {
+            res.status(400).json({ error: err.message || 'Erro ao adicionar livro à biblioteca.' });
+        }
+    });
+
+    // Books: Update book or reading progress in the private library
+    app.put('/api/books/:id', requireOwnerAuth, (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const update = updateLibraryBook(req.params.id as string, req.body);
+            res.json(update);
+        } catch(err: any) {
+            res.status(400).json({ error: err.message || 'Erro ao atualizar livro.' });
+        }
+    });
+
+    // Books: Delete book from the private library
+    app.delete('/api/books/:id', requireOwnerAuth, (req: AuthenticatedRequest, res: Response) => {
+        try {
+            deleteLibraryBook(req.params.id as string);
+            res.json({ sucess: true, message: 'Livro removido da biblioteca particular com sucesso.' });
+        } catch(err: any) {
+            res.status(400).json({ error: err.message || 'Erro ao remover livro.' });
+        }
+    });
+
+    // Aliases for user bookshelf (points directly to the private library)
+    app.get('/api/user/bookshelf/:bookId', requireOwnerAuth, (req: AuthenticatedRequest, res: Response) => {
+        const books = getLibraryBooks();
+        res.json(books);
+    });
+
+    app.post('/api/user/bookshelf/:bookId', requireOwnerAuth, (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const updated = updateLibraryBook(req.params.id as string, req.body);
+            res.json(updated);
+        } catch(err: any) {
+            res.status(400).json({ error: err.message || 'Erro ao atualizar livro na estante.' });
+        }
+    });
+
+    app.delete('/api/user/bookshelf/:bookId', requireOwnerAuth, (req: AuthenticatedRequest, res: Response) => {
+        try {
+            deleteLibraryBook(req.params.id as string);
+            res.json({ sucess: true, message: 'Livro removido da estante particular' });
+        } catch(err: any) {
+            res.status(400).json({ error: err.message || 'Erro ao remover livro.' });
+        }
+    });
+
+    // Reading Stats of the Proprietor
+    app.get('/api/user/stats', (req: Request, res: Response) => {
+        const stats = getReadingStats();
+        res.json(stats);
+    });
+
+    // Backup Export
+    app.get('/api/library/backup', requireOwnerAuth, (req: AuthenticatedRequest, res: Response) => {
+        const backup = exportLibraryBackup();
+        res.json(backup);
+    });
+
+    // -- VITE / SERVING FRONTEND --
+    if(process.env.NODE_ENV !== 'production') {
+        const vite = await createViteServer({
+            server: { middlewareMode: true },
+            appType: 'spa',
+        });
+        app.use(vite.middlewares);
+    } else {
+        const distPath = path.join(process.cwd(), 'dist');
+        app.use(express.static(distPath));
+        app.get('*', (req: Request, res: Response) => {
+            res.sendFile(path.join(distPath, 'index.html'));
+        });
+    }
+
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`✨ Maristory — Biblioteca Particular rodando na porta ${PORT}`);
+    });
 }
+
+startServer();
