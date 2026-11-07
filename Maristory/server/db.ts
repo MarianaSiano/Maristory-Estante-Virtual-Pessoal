@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { User, Book, ReadingStats, LibraryBackup } from '../src/types.js';
+import { User, Book, ReadingStats, LibraryBackup } from '../src/types.ts';
 
 interface DBData {
     owner: User & { passwordHash: string };
@@ -205,7 +205,6 @@ export function loadDB(): DBData {
     try {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         const data = JSON.parse(raw);
-        
         // If older multi-user schema exists, migrate it to the private owner schema
         if(data.users && !data.owner) {
             const adminUser = data.users.find((u: any) => u.role === 'ADMIN') || data.users[0];
@@ -242,7 +241,7 @@ export function loadDB(): DBData {
             return migrated;
         }
         return data;
-    } catch (err) {
+    } catch(err) {
         console.error('Error loading DB, resetting to defaults:', err);
         const defaultData = getDefaultData();
         saveDB(defaultData);

@@ -1,24 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { ReadingStats, User } from '../types.js';
-import { api } from '../service/api.ts';
+import { Book, ReadingStats, User } from '../types.js';
+import { api } from '../services/api.ts';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
-interface StatsViewProps {
-    user: User;
+export interface StatsViewProps {
+    user?: User | null;
+    stats?: ReadingStats | null;
+    books?: Book[];
 }
 
 const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-export const StatsView: React.FC<StatsViewProps> = ({ user }) => {
-    const [stats, setStats] = useState<ReadingStats | null>(null);
-    const [loading, setLoading] = useState(true);
+export const StatsView: React.FC<StatsViewProps> = ({ user, stats: initialStats, books }) => {
+    const [stats, setStats] = useState<ReadingStats | null>(initialStats || null);
+    const [loading, setLoading] = useState(!initialStats);
 
     useEffect(() => {
-        api.getUserStats()
-            .then(setStats)
-            .catch(console.error)
-            .finally(() => setLoading(false));
-    }, []);
+        if (!initialStats) {
+            api.getUserStats()
+                .then(setStats)
+                .catch(console.error)
+                .finally(() => setLoading(false));
+        } else {
+            setStats(initialStats);
+            setLoading(false);
+        }
+    }, [initialStats]);
 
     if(loading) {
         return (
@@ -60,14 +67,14 @@ export const StatsView: React.FC<StatsViewProps> = ({ user }) => {
         coverUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=400&q=80'
     };
 
-    const mostPopularBook = stats.mostPopularBook || {
+    const mostPopularBook = (stats as any).mostPopularBook || {
         title: 'A História do Universo para Quem Tem Pressa',
         author: 'Colin Stuart',
         readersCount: 4532,
         coverUrl: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400&q=80'
     };
 
-    const leastPopularBook = stats.leastPopularBook || {
+    const leastPopularBook = (stats as any).leastPopularBook || {
         title: 'Colônia X (AETHELGARD #1)',
         author: 'Jeferson Santos',
         readersCount: 21,
