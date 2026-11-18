@@ -9,7 +9,7 @@ export function getStoredToken(): string | null {
 
 export function getStoredUser(): User | null {
     const data = localStorage.getItem(USER_KEY);
-    if(!data) return null;
+    if (!data) return null;
     try {
         return JSON.parse(data);
     } catch {
@@ -34,7 +34,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
         ...(options.headers as Record<string, string> || {}),
     };
 
-    if(token) {
+    if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -45,8 +45,63 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 
     const data = await response.json();
 
-    if(!response.ok) {
+    if (!response.ok) {
         throw new Error(data.error || 'Ocorreu um erro ao comunicar com a biblioteca particular.');
     }
     return data as T;
+}
+
+export const api = {
+    // Auth
+    async login(email: string, pass: string): Promise<AuthResponse> {
+        const res = await apiFetch<AuthResponse>('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password: pass }),
+        });
+        saveAuthData(res.token, res.user);
+        return res;
+    },
+
+    async ownerDirectAccess(): Promise<AuthResponse> {
+        const res = await apiFetch<AuthResponse>('/api/auth/owner-acess', {
+            method: 'POST',
+        });
+        saveAuthData(res.token, res.user);
+        return res;
+    },
+
+    async forgotPassword(email: string, newPassword?: string): Promise<{ message: string }> {
+        return await apiFetch<{ message: string }>('/api/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email, newPassword }),
+        });
+    },
+
+    async getCurrentUser(): Promise<User> {
+        const res = await apiFetch<{ user: User }>('/api/auth/me');
+        const existingToken = getStoredToken();
+        if (existingToken) {
+            saveAuthData(existingToken, res.user);
+        }
+        return res.user;
+    },
+
+    async updateProfile(data: {
+        name?: string;
+        email?: string;
+        avatarUrl?: string;
+        readingGoal?: number;
+        currentPassword?: string;
+        newPassword?: string;
+    }): Promise<User> {
+        const res = await apiFetch<{ user: User; message: string }>('/api/user/profile', {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+        const existingToken = getStoredToken() || '';
+        saveAuthData(existingToken, res.user);
+        return res.user;
+    },
+
+    // Library Books
 }
