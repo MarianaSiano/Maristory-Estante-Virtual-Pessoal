@@ -213,3 +213,118 @@ export function resetOwnerPassword(email: string, newPassword?: string): { messa
 }
 
 // Library Books CRUD
+export function getLibraryBooks(options?: {
+    search?: string;
+    genre?: string;
+    status?: string;
+    ownership?: string;
+}): Book[] {
+    const db = loadDB();
+    let list = db.books;
+
+    if(options?.search) {
+        const q = options.search.toLowerCase().trim();
+    list = list.filter(
+        b =>
+            b.title.toLowerCase().includes(q) ||
+            b.author.toLowerCase().includes(q) ||
+            b.publisher.toLowerCase().includes(q) ||
+            b.genre.toLowerCase().includes(q) ||
+            b.isbn.includes(q)
+        );
+    }
+
+    if(options?.genre && options.genre !== 'Todos') {
+        list = list.filter(b => b.genre.toLocaleLowerCase() === options.genre!.toLocaleLowerCase());
+    }
+
+    if(options?.status && options.status !== 'ALL') {
+        if(options.status === 'FAVORITES') {
+            list = list.filter(b => b.isFavorite);
+        } else {
+            list = list.filter(b => b.readingStatus === options.status);
+        }
+    }
+
+    if(options?.ownership && options.ownership != 'ALL') {
+        list = list.filter(b => b.ownershipStatus === options.ownership);
+    }
+
+    return list;
+}
+
+export function getBookById(id: string): Book | null {
+    const db = loadDB();
+    return db.books.find(b => b.id === id) || null;
+}
+
+export function createLibraryBook(data: Partial<Book>): Book {
+    const db = loadDB();
+    if(!data.title || !data.author) {
+        throw new Error('Título e Autor são obrigatórios para registrar o livro na biblioteca');
+    }
+
+    const now = new Date().toISOString();
+    const newBook: Book = {
+        id: 'bk_' + crypto.randomUUID().slice(0, 8),
+        title: data.title.trim(),
+        author: data.author.trim(),
+        publisher: data.publisher?.trim() || 'Editora Particular',
+        publicationYear: Number(data.publicationYear) || new Date().getFullYear(),
+        pages: Number(data.pages) || 1,
+        genre: data.genre?.trim() || 'Geral',
+        synopsis: data.synopsis?.trim() || '',
+        isbn: data.isbn?.trim() || '',
+        coverUrl: data.coverUrl?.trim() || '',
+        ownershipStatus: data.ownershipStatus || 'TENHO',
+        readingStatus: data.readingStatus || 'QUERO_LER',
+        rating: Number(data.rating) || 0,
+        review: data.review?.trim() || '',
+        currentPage: Number(data.currentPage) || 0,
+        startDate: data.startDate || null,
+        finishDate: data.finishDate || null,
+        isFavorite: Boolean(data.isFavorite),
+        createdAt: now,
+        updatedAt: now,
+    };
+
+    db.books.unshift(newBook);
+    saveDB(db);
+    return newBook;
+}
+
+export function updateLibraryBook(id: string, updates: Partial<Book>): Book {
+    const db = loadDB();
+    const index = db.books.findIndex(b => b.id === id);
+    if(index === -1) {
+        throw new Error('Livro não encontrado na biblioteca particular.');
+    }
+
+    const current = db.books[index];
+    const updated: Book = {
+        ...current,
+        ...updates,
+        updatedAt: new Date().toISOString(),
+    };
+
+    // Keep pages bounds valid
+    if(updated.currentPage > updated.pages) {
+        updated.currentPage = updated.pages;
+    }
+    if(updated.readingStatus === 'LIDO' && !updated.finishDate) {
+        updated.finishDate = new Date().toISOString().split('T')[0];
+        updated.currentPage = updated.pages;
+    }
+
+    db.books[index] = updated;
+    saveDB(db);
+    return updated;
+}
+
+export function deleteLibraryBook(id: string): void {
+    const db = loadDB();
+    db.books = db.books.filter(b => b.id !== id);
+    saveDB(db);
+}
+
+// Reading Stats tailored strictly for the proprietor
