@@ -74,7 +74,7 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (editingBook) {
+        if(editingBook) {
             setTitle(editingBook.title || '');
             setAuthor(editingBook.author || '');
             setPublisher(editingBook.publisher || '');
@@ -122,7 +122,7 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
 
     const handleIsbnLookup = useCallback(async (rawIsbn: string) => {
         const clean = rawIsbn.replace(/[^0-9Xx]/g, '').toUpperCase();
-        if (clean.length !== 10 && clean.length !== 13) return;
+        if(clean.length !== 10 && clean.length !== 13) return;
 
         lastLookedUpIsbnRef.current = clean;
         setIsbnLookupStatus('loading');
@@ -132,14 +132,14 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
             const result = await api.lookupByIsbn(clean);
             // Verify ISBN didn't change while fetching
             const currentClean = isbn.replace(/[^0-9Xx]/g, '').toUpperCase();
-            if (currentClean && currentClean !== clean) return;
+            if(currentClean && currentClean !== clean) return;
 
-            if (result.coverUrl) {
+            if(result.coverUrl) {
                 setCoverUrl(result.coverUrl);
                 setCoverImgError(false);
                 setIsbnLookupStatus('found');
                 setIsbnLookupMessage('Capa da edição carregada automaticamente!');
-            } else if (result.title || result.author || result.publisher) {
+            } else if(result.title || result.author || result.publisher) {
                 setIsbnLookupStatus('metadata-only');
                 setIsbnLookupMessage('Dados da edição encontrados, mas sem imagem de capa disponível.');
             } else {
@@ -148,16 +148,16 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
             }
 
             // Fill empty bibliographic fields from the edition if not yet filled by user
-            if (result.title) setTitle((prev) => prev.trim() ? prev : result.title!);
-            if (result.author) setAuthor((prev) => prev.trim() ? prev : result.author!);
-            if (result.publisher) setPublisher((prev) => prev.trim() ? prev : result.publisher!);
-            if (result.publicationYear) {
+            if(result.title) setTitle((prev) => prev.trim() ? prev : result.title!);
+            if(result.author) setAuthor((prev) => prev.trim() ? prev : result.author!);
+            if(result.publisher) setPublisher((prev) => prev.trim() ? prev : result.publisher!);
+            if(result.publicationYear) {
                 setPublicationYear((prev) => (!editingBook && prev === new Date().getFullYear() ? result.publicationYear! : prev));
             }
-            if (result.pages && result.pages > 0) {
+            if(result.pages && result.pages > 0) {
                 setPages((prev) => (!editingBook && prev === 250 ? result.pages! : prev));
             }
-            if (result.synopsis) setSynopsis((prev) => prev.trim() ? prev : result.synopsis!);
+            if(result.synopsis) setSynopsis((prev) => prev.trim() ? prev : result.synopsis!);
         } catch {
             setIsbnLookupStatus('not-found');
             setIsbnLookupMessage('Não foi possível consultar o ISBN no momento.');
@@ -165,18 +165,18 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
     }, [editingBook, isbn]);
 
     useEffect(() => {
-        if (!isOpen) return;
+        if(!isOpen) return;
         const clean = isbn.replace(/[^0-9Xx]/g, '').toUpperCase();
 
-        if (clean.length !== 10 && clean.length !== 13) {
-            if (isbnLookupStatus !== 'idle') {
+        if(clean.length !== 10 && clean.length !== 13) {
+            if(isbnLookupStatus !== 'idle') {
                 setIsbnLookupStatus('idle');
                 setIsbnLookupMessage(null);
             }
             return;
         }
 
-        if (clean === lastLookedUpIsbnRef.current) {
+        if(clean === lastLookedUpIsbnRef.current) {
             return;
         }
 
@@ -187,12 +187,12 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
         return () => clearTimeout(timer);
     }, [isbn, isOpen, handleIsbnLookup, isbnLookupStatus]);
 
-    if (!isOpen) return null;
+    if(!isOpen) return null;
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
+        if(file) {
+            if(file.size > 5 * 1024 * 1024) {
                 setError('A capa selecionada deve ter menos de 5MB.');
                 return;
             }
@@ -208,12 +208,12 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
 
     const handleReadingStatusChange = (status: ReadingStatus) => {
         setReadingStatus(status);
-        if (status === 'LIDO') {
+        if(status === 'LIDO') {
             setCurrentPage(pages);
-            if (!finishDate) {
+            if(!finishDate) {
                 setFinishDate(new Date().toISOString().split('T')[0]);
             }
-        } else if (status === 'QUERO_LER') {
+        } else if(status === 'QUERO_LER') {
             setCurrentPage(0);
         }
     };
@@ -222,15 +222,15 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
         e.preventDefault();
         setError(null);
 
-        if (!title.trim()) {
+        if(!title.trim()) {
             setError('Informe o título do livro.');
             return;
         }
-        if (!author.trim()) {
+        if(!author.trim()) {
             setError('Informe o autor do livro.');
             return;
         }
-        if (!pages || pages <= 0) {
+        if(!pages || pages <= 0) {
             setError('Informe um número de páginas válido.');
             return;
         }
