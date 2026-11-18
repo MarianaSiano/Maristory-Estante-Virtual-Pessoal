@@ -224,13 +224,13 @@ export function getLibraryBooks(options?: {
 
     if(options?.search) {
         const q = options.search.toLowerCase().trim();
-    list = list.filter(
-        b =>
-            b.title.toLowerCase().includes(q) ||
-            b.author.toLowerCase().includes(q) ||
-            b.publisher.toLowerCase().includes(q) ||
-            b.genre.toLowerCase().includes(q) ||
-            b.isbn.includes(q)
+        list = list.filter(
+            b =>
+                b.title.toLowerCase().includes(q) ||
+                b.author.toLowerCase().includes(q) ||
+                b.publisher.toLowerCase().includes(q) ||
+                b.genre.toLowerCase().includes(q) ||
+                b.isbn.includes(q)
         );
     }
 
@@ -328,3 +328,104 @@ export function deleteLibraryBook(id: string): void {
 }
 
 // Reading Stats tailored strictly for the proprietor
+export function getReadingStats(): ReadingStats {
+    const db = loadDB();
+    const books = db.books;
+
+    const totalInShelf = books.length;
+    const booksRead = books.filter(b => b.readingStatus === 'LIDO').length;
+    const currentlyReading = books.filter(b => b.readingStatus === 'LENDO').length;
+    const wantToRead = books.filter(b => b.readingStatus === 'QUERO_LER').length;
+    const abandoned = books.filter(b => b.readingStatus === 'ABANDONOU').length;
+    const ownedBooks = books.filter(b => b.ownershipStatus === 'TENHO').length;
+
+    let pagesRead = 0;
+    let ratedCount = 0;
+    let ratingSum = 0;
+    const genreCounts: Record<string, number> = {};
+    const monthlyReadCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    const readBooks: Book[] = [];
+
+    books.forEach(b => {
+        if(b.readingStatus === 'LIDO') {
+            pagesRead += b.pages;
+            readBooks.push(b);
+
+            const d = b.finishDate ? new Date(b.finishDate) : new Date(b.updatedAt);
+            if(!isNaN(d.getTime())) {
+                monthlyReadCounts[d.getMonth()] += 1;
+            }
+        } else if(b.readingStatus === 'LENDO') {
+            pagesRead += Math.min(b.currentPage, b.pages);
+        }
+
+        if(b.genre) {
+            genreCounts[b.genre] = (genreCounts[b.genre] || 0) + 1;
+        }
+
+        if(b.rating > 0) {
+            ratedCount++;
+            ratingSum += b.rating;
+        }
+    });
+
+    const averageRating = ratedCount > 0 ? parseFloat((ratingSum / ratedCount).toFixed(1)) : 0;
+
+    const topGenres = Object.entries(genreCounts)
+        .map(([genre, count]) => ({ genre, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+
+    // Longest & Shortest
+    const sortedByPages = [...books].sort((a, b) => b.pages - a.pages);
+    const longestBook = sortedByPages.length > 0 ? {
+        title: sortedByPages[0].title,
+        author: `Por: ${sortedByPages[0].author}`,
+        pages: sortedByPages[0].pages,
+        coverUrl: sortedByPages[0].coverUrl
+    } : null;
+
+    const shortestBook = sortedByPages.length > 0 ? {
+        title: sortedByPages[sortedByPages.length - 1].title,
+        author: `Por: ${sortedByPages[sortedByPages.length - 1].author}`,
+        pages: sortedByPages[sortedByPages.length - 1].pages,
+        coverUrl: sortedByPages[sortedByPages.length - 1].coverUrl
+    } : null;
+
+    // Highest rated personal book
+    const ratedBooks = books.filter(b => b.rating > 0).sort((a, b) => b.rating - a.rating);
+    const highestRatedBook = ratedBooks.length > 0 ? {
+        title: ratedBooks[0].title,
+        author: ratedBooks[0].author,
+        rating: ratedBooks[0].rating,
+        coverUrl: ratedBooks[0].coverUrl
+    } : null;
+
+    return {
+        totalInShelf,
+        booksRead,
+        pagesRead,
+        currentlyReading,
+        wantToRead,
+        abandoned,
+        ownedBooks,
+        averageRating,
+        readingGoal: db.owner.readingGoal || 24,
+        topGenres,
+        monthlyReadCounts,
+        longestBook,
+        shortestBook,
+        highestRatedBook
+    };
+}
+
+export function exportLibraryBackup(): LibraryBackup {
+    const db = loadDB();
+    return {
+        exportDate: new Date().toISOString(),
+        owner: db.owner.name,
+        totalBooks: db.books.length,
+        books: db.books
+    };
+}
