@@ -1,4 +1,4 @@
-import { User, Book, ReadingStats, AuthResponse, LibraryBackup } from '../types';
+import { User, Book, ReadingStats, AuthResponse, LibraryBackup, IsbnLookupResult } from '../types';
 
 const TOKEN_KEY = 'maristory_auth_token';
 const USER_KEY = 'maristory_user_data';
@@ -176,5 +176,10 @@ export const api = {
     // Export Backup
     async getBackup(): Promise<LibraryBackup> {
         return apiFetch<LibraryBackup>('/api/library/backup');
+    },
+
+    // ISBN Lookup
+    async lookupByIsbn(isbn: string): Promise<IsbnLookupResult> {
+        return apiFetch<IsbnLookupResult>(`/api/isbn/${encodeURIComponent(isbn)}`);
     }
 };

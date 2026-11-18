@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Book, OwnershipStatus, ReadingStatus } from '../types';
+import { api } from '../services/api';
 import {
     X,
-    Plus,
     BookOpen,
     Image,
     Upload,
-    Sparkles,
     Heart,
     Star,
     BookmarkCheck,
     CheckCircle2,
-    Calendar,
     Layers,
-    FileText
+    Search,
+    Loader2,
+    Trash2
 } from 'lucide-react';
-import { stat } from 'fs';
 
 interface AddEditBookModalProps {
     isOpen: boolean;
@@ -23,17 +22,6 @@ interface AddEditBookModalProps {
     onSave: (bookData: Partial<Book>) => Promise<void>;
     editingBook?: Book | null;
 }
-
-const PRESET_COVERS = [
-    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1476275466078-4007374efbbe?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=600&q=80',
-];
 
 const SUGGESTED_GENRES = [
     'Romance',
@@ -64,7 +52,13 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
     const [genre, setGenre] = useState('Romance');
     const [synopsis, setSynopsis] = useState('');
     const [isbn, setIsbn] = useState('');
-    const [coverUrl, setCoverUrl] = useState(PRESET_COVERS[0]);
+    const [coverUrl, setCoverUrl] = useState('');
+    const [coverImgError, setCoverImgError] = useState(false);
+
+    // ISBN Lookup status
+    const [isbnLookupStatus, setIsbnLookupStatus] = useState<'idle' | 'loading' | 'found' | 'metadata-only' | 'not-found'>('idle');
+    const [isbnLookupMessage, setIsbnLookupMessage] = useState<string | null>(null);
+    const lastLookedUpIsbnRef = useRef<string>('');
 
     // Personal status
     const [ownershipStatus, setOwnershipStatus] = useState<OwnershipStatus>('TENHO');
@@ -89,7 +83,8 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
             setGenre(editingBook.genre || 'Romance');
             setSynopsis(editingBook.synopsis || '');
             setIsbn(editingBook.isbn || '');
-            setCoverUrl(editingBook.coverUrl || PRESET_COVERS[0]);
+            setCoverUrl(editingBook.coverUrl || '');
+            setCoverImgError(false);
             setOwnershipStatus(editingBook.ownershipStatus || 'TENHO');
             setReadingStatus(editingBook.readingStatus || 'QUERO_LER');
             setRating(editingBook.rating || 0);
@@ -98,6 +93,7 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
             setStartDate(editingBook.startDate || '');
             setFinishDate(editingBook.finishDate || '');
             setIsFavorite(editingBook.isFavorite || false);
+            lastLookedUpIsbnRef.current = (editingBook.isbn || '').replace(/[^0-9Xx]/g, '').toUpperCase();
         } else {
             setTitle('');
             setAuthor('');
@@ -107,7 +103,8 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
             setGenre('Romance');
             setSynopsis('');
             setIsbn('');
-            setCoverUrl(PRESET_COVERS[Math.floor(Math.random() * PRESET_COVERS.length)]);
+            setCoverUrl('');
+            setCoverImgError(false);
             setOwnershipStatus('TENHO');
             setReadingStatus('QUERO_LER');
             setRating(0);
@@ -116,22 +113,93 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
             setStartDate('');
             setFinishDate('');
             setIsFavorite(false);
+            lastLookedUpIsbnRef.current = '';
         }
+        setIsbnLookupStatus('idle');
+        setIsbnLookupMessage(null);
         setError(null);
     }, [editingBook, isOpen]);
 
-    if(!isOpen) return null;
+    const handleIsbnLookup = useCallback(async (rawIsbn: string) => {
+        const clean = rawIsbn.replace(/[^0-9Xx]/g, '').toUpperCase();
+        if (clean.length !== 10 && clean.length !== 13) return;
+
+        lastLookedUpIsbnRef.current = clean;
+        setIsbnLookupStatus('loading');
+        setIsbnLookupMessage('Buscando capa da edição pelo ISBN...');
+
+        try {
+            const result = await api.lookupByIsbn(clean);
+            // Verify ISBN didn't change while fetching
+            const currentClean = isbn.replace(/[^0-9Xx]/g, '').toUpperCase();
+            if (currentClean && currentClean !== clean) return;
+
+            if (result.coverUrl) {
+                setCoverUrl(result.coverUrl);
+                setCoverImgError(false);
+                setIsbnLookupStatus('found');
+                setIsbnLookupMessage('Capa da edição carregada automaticamente!');
+            } else if (result.title || result.author || result.publisher) {
+                setIsbnLookupStatus('metadata-only');
+                setIsbnLookupMessage('Dados da edição encontrados, mas sem imagem de capa disponível.');
+            } else {
+                setIsbnLookupStatus('not-found');
+                setIsbnLookupMessage('Capa não encontrada automaticamente para este ISBN.');
+            }
+
+            // Fill empty bibliographic fields from the edition if not yet filled by user
+            if (result.title) setTitle((prev) => prev.trim() ? prev : result.title!);
+            if (result.author) setAuthor((prev) => prev.trim() ? prev : result.author!);
+            if (result.publisher) setPublisher((prev) => prev.trim() ? prev : result.publisher!);
+            if (result.publicationYear) {
+                setPublicationYear((prev) => (!editingBook && prev === new Date().getFullYear() ? result.publicationYear! : prev));
+            }
+            if (result.pages && result.pages > 0) {
+                setPages((prev) => (!editingBook && prev === 250 ? result.pages! : prev));
+            }
+            if (result.synopsis) setSynopsis((prev) => prev.trim() ? prev : result.synopsis!);
+        } catch {
+            setIsbnLookupStatus('not-found');
+            setIsbnLookupMessage('Não foi possível consultar o ISBN no momento.');
+        }
+    }, [editingBook, isbn]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const clean = isbn.replace(/[^0-9Xx]/g, '').toUpperCase();
+
+        if (clean.length !== 10 && clean.length !== 13) {
+            if (isbnLookupStatus !== 'idle') {
+                setIsbnLookupStatus('idle');
+                setIsbnLookupMessage(null);
+            }
+            return;
+        }
+
+        if (clean === lastLookedUpIsbnRef.current) {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            handleIsbnLookup(clean);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [isbn, isOpen, handleIsbnLookup, isbnLookupStatus]);
+
+    if (!isOpen) return null;
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if(file) {
-            if(file.size > 5 * 1024 * 1024) {
-                setError('A capa selecionada deve ter menos de 5MB');
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                setError('A capa selecionada deve ter menos de 5MB.');
                 return;
             }
             const reader = new FileReader();
             reader.onloadend = () => {
                 setCoverUrl(reader.result as string);
+                setCoverImgError(false);
                 setError(null);
             };
             reader.readAsDataURL(file);
@@ -140,12 +208,12 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
 
     const handleReadingStatusChange = (status: ReadingStatus) => {
         setReadingStatus(status);
-        if(status === 'LIDO') {
+        if (status === 'LIDO') {
             setCurrentPage(pages);
-            if(!finishDate) {
+            if (!finishDate) {
                 setFinishDate(new Date().toISOString().split('T')[0]);
             }
-        } else if(status === 'QUERO_LER') {
+        } else if (status === 'QUERO_LER') {
             setCurrentPage(0);
         }
     };
@@ -154,17 +222,15 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
         e.preventDefault();
         setError(null);
 
-        if(!title.trim()) {
+        if (!title.trim()) {
             setError('Informe o título do livro.');
             return;
         }
-
-        if(!author.trim()) {
+        if (!author.trim()) {
             setError('Informe o autor do livro.');
             return;
         }
-
-        if(!pages || pages <= 0) {
+        if (!pages || pages <= 0) {
             setError('Informe um número de páginas válido.');
             return;
         }
@@ -190,10 +256,11 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                 finishDate: finishDate || null,
                 isFavorite,
             });
-        } catch(err: any) {
+            onClose();
+        } catch (err: any) {
             setError(err.message || 'Erro ao salvar livro na biblioteca particular.');
         } finally {
-            setSaving(true);
+            setSaving(false);
         }
     };
 
@@ -329,17 +396,49 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                 </div>
                             </div>
 
-                            <div>
+                            <div className="sm:col-span-2">
                                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                    ISBN (Opcional)
+                                    ISBN (Opcional — busca automaticamente a capa da edição)
                                 </label>
-                                <input
-                                    type="text"
-                                    value={isbn}
-                                    onChange={(e) => setIsbn(e.target.value)}
-                                    placeholder="Ex: 9788535914849"
-                                    className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none"
-                                />
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value={isbn}
+                                        onChange={(e) => setIsbn(e.target.value)}
+                                        placeholder="Ex: 9788535914849"
+                                        className="flex-1 px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none"
+                                    />
+                                    <button
+                                        type="button"
+                                        disabled={
+                                            isbnLookupStatus === 'loading' ||
+                                            (isbn.replace(/[^0-9Xx]/g, '').length !== 10 &&
+                                                isbn.replace(/[^0-9Xx]/g, '').length !== 13)
+                                        }
+                                        onClick={() => handleIsbnLookup(isbn)}
+                                        className="px-3 py-2 bg-purple-50 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed text-purple-800 border border-purple-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+                                        title="Buscar capa da edição pelo ISBN"
+                                    >
+                                        {isbnLookupStatus === 'loading' ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                            <Search className="w-3.5 h-3.5" />
+                                        )}
+                                        <span>Buscar capa</span>
+                                    </button>
+                                </div>
+                                {isbnLookupMessage && (
+                                    <p
+                                        className={`text-[11px] mt-1 font-medium flex items-center gap-1 ${isbnLookupStatus === 'found'
+                                                ? 'text-emerald-700'
+                                                : isbnLookupStatus === 'loading'
+                                                    ? 'text-purple-700'
+                                                    : 'text-slate-500'
+                                            }`}
+                                    >
+                                        {isbnLookupMessage}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="sm:col-span-2">
@@ -362,23 +461,32 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                 Capa do Livro
                             </label>
                             <div className="flex items-center gap-4">
-                                <img
-                                    src={coverUrl}
-                                    alt="Prévia da capa"
-                                    className="w-16 h-22 object-cover rounded-md border border-slate-200 shadow-2xs"
-                                    onError={(e) => {
-                                        e.currentTarget.src = PRESET_COVERS[0];
-                                    }}
-                                />
+                                {coverUrl && !coverImgError ? (
+                                    <img
+                                        src={coverUrl}
+                                        alt="Prévia da capa"
+                                        className="w-16 h-22 object-cover rounded-md border border-slate-200 shadow-2xs shrink-0"
+                                        onError={() => setCoverImgError(true)}
+                                    />
+                                ) : (
+                                    <div className="w-16 h-22 rounded-md border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400 shrink-0 px-1 text-center">
+                                        <Image className="w-5 h-5 mb-1 text-slate-300" />
+                                        <span className="text-[9px] font-medium leading-tight">Sem capa</span>
+                                    </div>
+                                )}
+
                                 <div className="flex-1 space-y-2">
                                     <input
                                         type="url"
                                         value={coverUrl}
-                                        onChange={(e) => setCoverUrl(e.target.value)}
-                                        placeholder="Cole a URL da imagem da capa..."
+                                        onChange={(e) => {
+                                            setCoverUrl(e.target.value);
+                                            setCoverImgError(false);
+                                        }}
+                                        placeholder="Capa automática pelo ISBN ou cole a URL da imagem..."
                                         className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none"
                                     />
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <label className="cursor-pointer px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-semibold flex items-center gap-1.5 transition-colors">
                                             <Upload className="w-3 h-3" />
                                             <span>Fazer upload de foto</span>
@@ -389,20 +497,19 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                                 className="hidden"
                                             />
                                         </label>
-                                        <span className="text-[10px] text-slate-400">ou escolha uma sugestão:</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 overflow-x-auto py-1">
-                                        {PRESET_COVERS.slice(0, 6).map((c, i) => (
+                                        {coverUrl && (
                                             <button
-                                                key={i}
                                                 type="button"
-                                                onClick={() => setCoverUrl(c)}
-                                                className={`w-7 h-10 rounded border overflow-hidden shrink-0 transition-transform ${coverUrl === c ? 'ring-2 ring-purple-600 scale-105' : 'opacity-70 hover:opacity-100'
-                                                    }`}
+                                                onClick={() => {
+                                                    setCoverUrl('');
+                                                    setCoverImgError(false);
+                                                }}
+                                                className="px-2.5 py-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors"
                                             >
-                                                <img src={c} alt="Preset" className="w-full h-full object-cover" />
+                                                <Trash2 className="w-3 h-3" />
+                                                <span>Remover capa</span>
                                             </button>
-                                        ))}
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -428,8 +535,8 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                     type="button"
                                     onClick={() => setOwnershipStatus('TENHO')}
                                     className={`p-3 rounded-xl border text-left transition-all ${ownershipStatus === 'TENHO'
-                                        ? 'border-purple-600 bg-purple-50 text-purple-950 font-bold shadow-2xs'
-                                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                            ? 'border-purple-600 bg-purple-50 text-purple-950 font-bold shadow-2xs'
+                                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                                         }`}
                                 >
                                     <div className="text-xs font-bold">📦 Tenho Exemplar Físico</div>
@@ -440,8 +547,8 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                     type="button"
                                     onClick={() => setOwnershipStatus('NAO_TENHO')}
                                     className={`p-3 rounded-xl border text-left transition-all ${ownershipStatus === 'NAO_TENHO'
-                                        ? 'border-purple-600 bg-purple-50 text-purple-950 font-bold shadow-2xs'
-                                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                            ? 'border-purple-600 bg-purple-50 text-purple-950 font-bold shadow-2xs'
+                                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                                         }`}
                                 >
                                     <div className="text-xs font-bold">🔖 Desejo Adquirir</div>
@@ -467,8 +574,8 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                         type="button"
                                         onClick={() => handleReadingStatusChange(st.id as ReadingStatus)}
                                         className={`py-2 px-3 rounded-lg text-xs font-bold transition-all border ${readingStatus === st.id
-                                            ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
-                                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                                                ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                                             }`}
                                     >
                                         {st.label}
@@ -537,8 +644,8 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                         >
                                             <Star
                                                 className={`w-5 h-5 ${star <= rating
-                                                    ? 'text-amber-400 fill-amber-400'
-                                                    : 'text-slate-300'
+                                                        ? 'text-amber-400 fill-amber-400'
+                                                        : 'text-slate-300'
                                                     }`}
                                             />
                                         </button>
@@ -553,8 +660,8 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                 type="button"
                                 onClick={() => setIsFavorite(!isFavorite)}
                                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${isFavorite
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                                     }`}
                             >
                                 <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
@@ -613,4 +720,4 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
             </div>
         </div>
     );
-}
+};
