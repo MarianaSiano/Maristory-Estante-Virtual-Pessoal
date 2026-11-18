@@ -13,7 +13,7 @@ import { Lock, BookOpen } from 'lucide-react';
 
 export function App() {
     const [user, setUser] = useState<User | null>(() => getStoredUser());
-    const [activeTab, setActiveTab] = useState<'shelf' | 'catalog' | 'stats' | 'admin'>('shelf');
+    const [activeTab, setActiveTab] = useState<'shelf' | 'stats'>('shelf');
     const [books, setBooks] = useState<Book[]>([]);
     const [stats, setStats] = useState<ReadingStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -177,7 +177,11 @@ export function App() {
             <Header
                 user={user}
                 activeTab={activeTab}
-                setActiveTab={setActiveTab}
+                setActiveTab={(tab) => {
+                    if (tab === 'shelf' || tab === 'stats') {
+                        setActiveTab(tab);
+                    }
+                }}
                 onOpenAuth={() => setIsAuthOpen(true)}
                 onLogout={handleLogout}
                 onOpenProfile={() => setIsProfileOpen(true)}
@@ -234,7 +238,7 @@ export function App() {
                         onQuickAddPages={handleQuickAddPages}
                     />
                 ) : (
-                    <StatsView user={user} stats={stats} books={books} />
+                    <StatsView stats={stats} books={books} />
                 )}
             </main>
 
@@ -245,14 +249,13 @@ export function App() {
             {/* 1. Book Detail Modal */}
             <BookDetailModal
                 book={selectedBook}
-                bookshelfItem={selectedBook}
                 isOpen={isDetailOpen}
                 onClose={() => {
                     setIsDetailOpen(false);
                     setSelectedBook(null);
                 }}
                 onSave={handleSaveBookProgress}
-                onEditBookDetails={(book: Book) => {
+                onEditBookDetails={(book) => {
                     setEditingBook(book);
                     setIsAddEditOpen(true);
                 }}
