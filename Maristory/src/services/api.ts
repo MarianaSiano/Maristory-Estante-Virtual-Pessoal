@@ -9,7 +9,7 @@ export function getStoredToken(): string | null {
 
 export function getStoredUser(): User | null {
     const data = localStorage.getItem(USER_KEY);
-    if (!data) return null;
+    if(!data) return null;
     try {
         return JSON.parse(data);
     } catch {
@@ -17,7 +17,7 @@ export function getStoredUser(): User | null {
     }
 }
 
-export function saveAuthData(token: string, user: User) {
+export function saveAuthData(token: string, user: User): void {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
@@ -34,7 +34,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
         ...(options.headers as Record<string, string> || {}),
     };
 
-    if (token) {
+    if(token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -45,9 +45,10 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if(!response.ok) {
         throw new Error(data.error || 'Ocorreu um erro ao comunicar com a biblioteca particular.');
     }
+
     return data as T;
 }
 
@@ -63,7 +64,7 @@ export const api = {
     },
 
     async ownerDirectAccess(): Promise<AuthResponse> {
-        const res = await apiFetch<AuthResponse>('/api/auth/owner-acess', {
+        const res = await apiFetch<AuthResponse>('/api/auth/owner-access', {
             method: 'POST',
         });
         saveAuthData(res.token, res.user);
@@ -80,7 +81,7 @@ export const api = {
     async getCurrentUser(): Promise<User> {
         const res = await apiFetch<{ user: User }>('/api/auth/me');
         const existingToken = getStoredToken();
-        if (existingToken) {
+        if(existingToken) {
             saveAuthData(existingToken, res.user);
         }
         return res.user;
@@ -104,4 +105,137 @@ export const api = {
     },
 
     // Library Books
-}
+    async getBooks(options?: {
+        search?: string;
+        genre?: string;
+        status?: string;
+        ownership?: string;
+    }): Promise<Book[]> {
+        const query = new URLSearchParams();
+        if(options?.search) query.append('search', options.search);
+        if(options?.genre && options.genre !== 'Todos') query.append('genre', options.genre);
+        if(options?.status && options.status !== 'ALL') query.append('status', options.status);
+        if(options?.ownership && options.ownership !== 'ALL') query.append('ownership', options.ownership);
+
+        const queryString = query.toString();
+        return apiFetch<Book[]>(`/api/books${queryString ? `?${queryString}` : ''}`);
+    },
+
+    async getBookById(id: string): Promise<Book> {
+        return apiFetch<Book>(`/api/books/${id}`);
+    },
+
+    async createBook(book: Partial<Book>): Promise<Book> {
+        return apiFetch<Book>('/api/books', {
+            method: 'POST',
+            body: JSON.stringify(book),
+        });
+    },
+
+    async updateBook(id: string, updates: Partial<Book>): Promise<Book> {
+        return apiFetch<Book>(`/api/books/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(updates),
+        });
+    },
+
+    async deleteBook(id: string): Promise<{ success: boolean; message: string }> {
+        return apiFetch<{ success: boolean; message: string }>(`/api/books/${id}`, {
+            method: 'DELETE',
+        });
+    },
+
+    // Aliases for compatibility
+    async getUserBookshelf(): Promise<Book[]> {
+        return this.getBooks();
+    },
+
+    async updateBookshelfItem(bookId: string, itemData: Partial<Book>): Promise<Book> {
+        return this.updateBook(bookId, itemData);
+    },
+
+    async removeFromBookshelf(bookId: string): Promise<{ success: boolean; message: string }> {
+        return this.deleteBook(bookId);
+    },
+
+    // Personal Reading Stats
+    async getUserStats(): Promise<ReadingStats> {
+        return apiFetch<ReadingStats>('/api/user/stats');
+    },
+
+    // Export Backup
+    async getBackup(): Promise<LibraryBackup> {
+        return apiFetch<LibraryBackup>('/api/library/backup');
+    },
+
+    // ISBN Edition Cover & Metadata Lookup
+    async lookupByIsbn(isbn: string): Promise<IsbnLookupResult> {
+        const cleanIsbn = isbn.replace(/[^0-9Xx]/g, '').toUpperCase();
+        let result: IsbnLookupResult = { isbn: cleanIsbn, coverUrl: null };
+
+        try {
+            result = await apiFetch<IsbnLookupResult>(`/api/books/isbn/${encodeURIComponent(cleanIsbn)}`);
+        } catch {
+            // Continue to browser fallback
+        }
+
+        // If backend couldn't get a cover (e.g. Google Books server quota), try directly from browser
+        if(!result.coverUrl) {
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 4500);
+                const resp = await fetch(
+                    `https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(cleanIsbn)}`,
+                    { signal: controller.signal }
+                );
+                clearTimeout(timeout);
+
+                if(resp.ok) {
+                    const data = await resp.json();
+                    const info = data.items?.[0]?.volumeInfo;
+                    if(info) {
+                        const rawCover =
+                            info.imageLinks?.extraLarge ||
+                            info.imageLinks?.large ||
+                            info.imageLinks?.medium ||
+                            info.imageLinks?.small ||
+                            info.imageLinks?.thumbnail ||
+                            info.imageLinks?.smallThumbnail ||
+                            null;
+
+                        const googleCover = rawCover
+                            ? String(rawCover).replace(/^http:\/\//i, 'https://').replace(/&edge=curl/gi, '')
+                            : null;
+
+                        const yearMatch = info.publishedDate ? String(info.publishedDate).match(/\d{4}/) : null;
+
+                        result = {
+                            isbn: cleanIsbn,
+                            coverUrl: googleCover || result.coverUrl,
+                            title: result.title || info.title || undefined,
+                            author:
+                                result.author ||
+                                (Array.isArray(info.authors) && info.authors.length > 0
+                                    ? info.authors.join(', ')
+                                    : undefined),
+                            publisher: result.publisher || info.publisher || undefined,
+                            publicationYear:
+                                result.publicationYear || (yearMatch ? Number(yearMatch[0]) : undefined),
+                            pages: result.pages || (info.pageCount ? Number(info.pageCount) : undefined),
+                            genre:
+                                result.genre ||
+                                (Array.isArray(info.categories) && info.categories[0]) ||
+                                undefined,
+                            synopsis: result.synopsis || info.description || undefined,
+                            source: googleCover ? 'Google Books' : result.source,
+                        };
+                    }
+                }
+            } catch {
+                // Ignore browser network errors
+            }
+        }
+
+        return result;
+    }
+};
