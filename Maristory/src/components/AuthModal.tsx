@@ -51,9 +51,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         try {
             const res = await api.login(email, password);
             onSuccess(res.user);
-            onClose();
+            setError(null);
         } catch(err: any) {
-            setError(err.message || 'Credenciais inválidas. Esta biblioteca é restrita à sua proprietária.');
+            setError(err.message || 'Credenciais inválidas. Esta biblioteca é restrita à sua proprietária');
         } finally {
             setLoading(false);
         }
@@ -61,8 +61,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
+        if(newPassword && newPassword.length < 8) {
+            setError('A nova senha deve ter, no mínimo, 8 caracteres');
+            return;
+        }
+        setLoading(true);
         try {
             const res = await api.forgotPassword(email, newPassword || undefined);
             setSuccessMessage(res.message);
@@ -73,7 +77,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                 }, 2000);
             }
         } catch(err: any) {
-            setError(err.message || 'Erro ao processar redefinição de senha.');
+            setError(err.message || 'Erro ao redefinir a senha.');
         } finally {
             setLoading(false);
         }
@@ -179,6 +183,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                                         <input
                                             type="password"
                                             required
+                                            minLength={8}
                                             placeholder="••••••••"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -235,8 +240,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                                 <input
                                     type="password"
                                     required
-                                    minLength={6}
-                                    placeholder="Mínimo 6 caracteres"
+                                    minLength={8}
+                                    placeholder="Mínimo 8 caracteres"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none"
@@ -268,4 +273,4 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
             </div>
         </div>
     );
-};
+}
