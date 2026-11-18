@@ -7,7 +7,7 @@ export interface User {
     role: UserRole;
     avatarUrl?: string;
     readingGoal?: number;
-    createdAt: string;
+    createAt: string;
 }
 
 export type OwnershipStatus = 'TENHO' | 'NAO_TENHO';
@@ -66,4 +66,17 @@ export interface LibraryBackup {
     owner: string;
     totalBooks: number;
     books: Book[];
+}
+
+export interface IsbnLookupResult {
+    isbn: string;
+    coverUrl: string | null;
+    title?: string;
+    author?: string;
+    publisher?: string;
+    publicationYear?: number;
+    pages?: number;
+    genre?: string;
+    synopsis?: string;
+    source?: string;
 }
