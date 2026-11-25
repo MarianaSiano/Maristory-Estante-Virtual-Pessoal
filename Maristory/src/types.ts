@@ -7,7 +7,7 @@ export interface User {
     role: UserRole;
     avatarUrl?: string;
     readingGoal?: number;
-    createAt: string;
+    createdAt: string;
 }
 
 export type OwnershipStatus = 'TENHO' | 'NAO_TENHO';
@@ -44,6 +44,12 @@ export interface AuthResponse {
     user: User;
 }
 
+export interface ReadingDayEntry {
+    date: string; // YYYY-MM-DD
+    pagesRead: number;
+    bookIds: string[];
+}
+
 export interface ReadingStats {
     totalInShelf: number;
     booksRead: number;
@@ -59,6 +65,7 @@ export interface ReadingStats {
     longestBook: { title: string; author: string; pages: number; coverUrl: string } | null;
     shortestBook: { title: string; author: string; pages: number; coverUrl: string } | null;
     highestRatedBook: { title: string; author: string; rating: number; coverUrl: string } | null;
+    readingDays: Record<string, ReadingDayEntry>;
 }
 
 export interface LibraryBackup {
@@ -66,6 +73,7 @@ export interface LibraryBackup {
     owner: string;
     totalBooks: number;
     books: Book[];
+    readingDays?: Record<string, ReadingDayEntry>;
 }
 
 export interface IsbnLookupResult {
