@@ -51,7 +51,7 @@ export function getCurrentWeekDays(referenceDate: Date = new Date()): WeekDayInf
     startOfWeek.setDate(today.getDate() - today.getDay());
 
     const days: WeekDayInfo[] = [];
-    for (let i = 0; i < 7; i++) {
+    for(let i = 0; i < 7; i++) {
         const d = new Date(startOfWeek);
         d.setDate(startOfWeek.getDate() + i);
         const dateStr = getLocalDateString(d);
@@ -120,7 +120,7 @@ export function getMonthCalendarData(
     const totalDays = new Date(year, month + 1, 0).getDate();
 
     const days: MonthDayInfo[] = [];
-    for (let day = 1; day <= totalDays; day++) {
+    for(let day = 1; day <= totalDays; day++) {
         const d = new Date(year, month, day);
         const dateStr = getLocalDateString(d);
         const weekdayIdx = d.getDay();

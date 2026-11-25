@@ -32,7 +32,6 @@ export const MonthlyReadingTracker: React.FC<MonthlyReadingTrackerProps> = ({
     const daysReadCount = calendar.days.filter((d) =>
         Boolean(readingDays[d.date])
     ).length;
-
     const monthPagesTotal = calendar.days.reduce(
         (sum, d) => sum + (readingDays[d.date]?.pagesRead || 0),
         0
@@ -43,7 +42,7 @@ export const MonthlyReadingTracker: React.FC<MonthlyReadingTrackerProps> = ({
             setSelectedYear((y) => y - 1);
             setSelectedMonth(11);
         } else {
-            setSelectedMonth((m) => m + 1);
+            setSelectedMonth((m) => m - 1);
         }
     };
 
@@ -225,5 +224,5 @@ export const MonthlyReadingTracker: React.FC<MonthlyReadingTrackerProps> = ({
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
