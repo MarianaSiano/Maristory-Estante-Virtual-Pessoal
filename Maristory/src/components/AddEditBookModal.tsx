@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Book, OwnershipStatus, ReadingStatus } from '../types';
 import { api } from '../services/api';
+import { getLocalDateString } from '../utils/date';
 import {
     X,
     BookOpen,
@@ -211,10 +212,21 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
         if(status === 'LIDO') {
             setCurrentPage(pages);
             if(!finishDate) {
-                setFinishDate(new Date().toISOString().split('T')[0]);
+                setFinishDate(getLocalDateString());
             }
         } else if(status === 'QUERO_LER') {
             setCurrentPage(0);
+        }
+    };
+
+    const handleCurrentPageChange = (value: number) => {
+        const clamped = Math.max(0, Math.min(pages || 0, Number.isNaN(value) ? 0 : value));
+        setCurrentPage(clamped);
+        if(pages > 0 && clamped >= pages && readingStatus === 'LENDO') {
+            setReadingStatus('LIDO');
+            if(!finishDate) {
+                setFinishDate(getLocalDateString());
+            }
         }
     };
 
@@ -257,7 +269,7 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                 isFavorite,
             });
             onClose();
-        } catch (err: any) {
+        } catch(err: any) {
             setError(err.message || 'Erro ao salvar livro na biblioteca particular.');
         } finally {
             setSaving(false);
@@ -596,7 +608,7 @@ export const AddEditBookModal: React.FC<AddEditBookModalProps> = ({
                                         min="0"
                                         max={pages}
                                         value={currentPage}
-                                        onChange={(e) => setCurrentPage(Number(e.target.value))}
+                                        onChange={(e) => handleCurrentPageChange(Number(e.target.value))}
                                         className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none"
                                     />
                                     <span className="text-xs text-slate-400 shrink-0">/ {pages}</span>

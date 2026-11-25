@@ -1,6 +1,8 @@
 import React from 'react';
 import { ReadingStats, Book } from '../types';
 import { BookCover } from './BookCover';
+import { WeeklyReadingTracker } from './WeeklyReadingTracker';
+import { MonthlyReadingTracker } from './MonthlyReadingTracker';
 import {
     BarChart3,
     BookOpen,
@@ -128,6 +130,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ stats, books }) => {
                 </div>
 
             </div>
+
+            {/* Dias da Semana */}
+            <WeeklyReadingTracker readingDays={stats.readingDays} />
+
+            {/* Hábito de Leitura Mensal */}
+            <MonthlyReadingTracker readingDays={stats.readingDays} />
 
             {/* Grid: Gráfico Mensal e Distribuição por Gênero */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

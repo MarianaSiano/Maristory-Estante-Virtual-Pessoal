@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Book, OwnershipStatus, ReadingStatus } from '../types';
+import { BookCover } from './BookCover';
+import { getLocalDateString } from '../utils/date';
 import {
     X,
     Star,
@@ -33,22 +35,20 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
     onEditBookDetails,
     onRemove,
 }) => {
-    if (!isOpen || !book) return null;
-
-    const [ownershipStatus, setOwnershipStatus] = useState<OwnershipStatus>(book.ownershipStatus || 'TENHO');
-    const [readingStatus, setReadingStatus] = useState<ReadingStatus>(book.readingStatus || 'QUERO_LER');
-    const [rating, setRating] = useState<number>(book.rating || 0);
-    const [review, setReview] = useState<string>(book.review || '');
-    const [currentPage, setCurrentPage] = useState<number>(book.currentPage || 0);
-    const [startDate, setStartDate] = useState<string>(book.startDate || '');
-    const [finishDate, setFinishDate] = useState<string>(book.finishDate || '');
-    const [isFavorite, setIsFavorite] = useState<boolean>(book.isFavorite || false);
+    const [ownershipStatus, setOwnershipStatus] = useState<OwnershipStatus>(book?.ownershipStatus || 'TENHO');
+    const [readingStatus, setReadingStatus] = useState<ReadingStatus>(book?.readingStatus || 'QUERO_LER');
+    const [rating, setRating] = useState<number>(book?.rating || 0);
+    const [review, setReview] = useState<string>(book?.review || '');
+    const [currentPage, setCurrentPage] = useState<number>(book?.currentPage || 0);
+    const [startDate, setStartDate] = useState<string>(book?.startDate || '');
+    const [finishDate, setFinishDate] = useState<string>(book?.finishDate || '');
+    const [isFavorite, setIsFavorite] = useState<boolean>(book?.isFavorite || false);
 
     const [saving, setSaving] = useState(false);
     const [removing, setRemoving] = useState(false);
 
     useEffect(() => {
-        if (book) {
+        if(book) {
             setOwnershipStatus(book.ownershipStatus || 'TENHO');
             setReadingStatus(book.readingStatus || 'QUERO_LER');
             setRating(book.rating || 0);
@@ -60,14 +60,16 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
         }
     }, [book]);
 
+    if(!isOpen || !book) return null;
+
     const handleStatusChange = (status: ReadingStatus) => {
         setReadingStatus(status);
-        if (status === 'LIDO') {
+        if(status === 'LIDO') {
             setCurrentPage(book.pages);
-            if (!finishDate) {
-                setFinishDate(new Date().toISOString().split('T')[0]);
+            if(!finishDate) {
+                setFinishDate(getLocalDateString());
             }
-        } else if (status === 'QUERO_LER') {
+        } else if(status === 'QUERO_LER') {
             setCurrentPage(0);
         }
     };
@@ -75,15 +77,15 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
     const handleAddPages = (delta: number) => {
         const next = Math.min(book.pages, Math.max(0, currentPage + delta));
         setCurrentPage(next);
-        if (next === book.pages && readingStatus !== 'LIDO') {
+        if(next === book.pages && readingStatus !== 'LIDO') {
             setReadingStatus('LIDO');
-            if (!finishDate) {
-                setFinishDate(new Date().toISOString().split('T')[0])
+            if(!finishDate) {
+                setFinishDate(getLocalDateString());
             }
-        } else if (next > 0 && readingStatus === 'QUERO_LER') {
+        } else if(next > 0 && readingStatus === 'QUERO_LER') {
             setReadingStatus('LENDO');
-            if (!startDate) {
-                setStartDate(new Date().toISOString().split('T')[0]);
+            if(!startDate) {
+                setStartDate(getLocalDateString());
             }
         }
     };
@@ -102,7 +104,7 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
                 isFavorite,
             });
             onClose();
-        } catch (err) {
+        } catch(err) {
             console.error(err);
         } finally {
             setSaving(false);
@@ -167,13 +169,10 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
                     <div className="flex flex-col sm:flex-row gap-5 items-start">
                         {/* Book Cover */}
                         <div className="relative shrink-0 w-28 sm:w-32 shadow-md rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                            <img
-                                src={book.coverUrl}
-                                alt={book.title}
+                            <BookCover
+                                coverUrl={book.coverUrl}
+                                title={book.title}
                                 className="w-full h-40 sm:h-44 object-cover"
-                                onError={(e) => {
-                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80';
-                                }}
                             />
                             <button
                                 type="button"
@@ -193,8 +192,8 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
                                     {book.genre || 'Literatura'}
                                 </span>
                                 <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${ownershipStatus === 'TENHO'
-                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                        : 'bg-amber-50 text-amber-800 border-amber-200'
                                     }`}>
                                     {ownershipStatus === 'TENHO' ? '📦 Exemplar no Acervo Físico' : '🔖 Lista de Desejos'}
                                 </span>
@@ -239,8 +238,8 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
                                     type="button"
                                     onClick={() => handleStatusChange(st.id as ReadingStatus)}
                                     className={`py-2 px-3 rounded-lg text-xs font-bold transition-all border ${readingStatus === st.id
-                                        ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
-                                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                                            ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                                         }`}
                                 >
                                     {st.label}
@@ -431,4 +430,4 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
             </div>
         </div>
     );
-}
+};
