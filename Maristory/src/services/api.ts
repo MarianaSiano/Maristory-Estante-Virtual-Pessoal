@@ -1,4 +1,5 @@
 import { User, Book, ReadingStats, AuthResponse, LibraryBackup, IsbnLookupResult } from '../types';
+import { getLocalDateString } from '../utils/date';
 
 const TOKEN_KEY = 'maristory_auth_token';
 const USER_KEY = 'maristory_user_data';
@@ -9,7 +10,7 @@ export function getStoredToken(): string | null {
 
 export function getStoredUser(): User | null {
     const data = localStorage.getItem(USER_KEY);
-    if(!data) return null;
+    if (!data) return null;
     try {
         return JSON.parse(data);
     } catch {
@@ -34,7 +35,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
         ...(options.headers as Record<string, string> || {}),
     };
 
-    if(token) {
+    if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -45,7 +46,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 
     const data = await response.json();
 
-    if(!response.ok) {
+    if (!response.ok) {
         throw new Error(data.error || 'Ocorreu um erro ao comunicar com a biblioteca particular.');
     }
 
@@ -81,7 +82,7 @@ export const api = {
     async getCurrentUser(): Promise<User> {
         const res = await apiFetch<{ user: User }>('/api/auth/me');
         const existingToken = getStoredToken();
-        if(existingToken) {
+        if (existingToken) {
             saveAuthData(existingToken, res.user);
         }
         return res.user;
@@ -112,10 +113,10 @@ export const api = {
         ownership?: string;
     }): Promise<Book[]> {
         const query = new URLSearchParams();
-        if(options?.search) query.append('search', options.search);
-        if(options?.genre && options.genre !== 'Todos') query.append('genre', options.genre);
-        if(options?.status && options.status !== 'ALL') query.append('status', options.status);
-        if(options?.ownership && options.ownership !== 'ALL') query.append('ownership', options.ownership);
+        if (options?.search) query.append('search', options.search);
+        if (options?.genre && options.genre !== 'Todos') query.append('genre', options.genre);
+        if (options?.status && options.status !== 'ALL') query.append('status', options.status);
+        if (options?.ownership && options.ownership !== 'ALL') query.append('ownership', options.ownership);
 
         const queryString = query.toString();
         return apiFetch<Book[]>(`/api/books${queryString ? `?${queryString}` : ''}`);
@@ -128,14 +129,14 @@ export const api = {
     async createBook(book: Partial<Book>): Promise<Book> {
         return apiFetch<Book>('/api/books', {
             method: 'POST',
-            body: JSON.stringify(book),
+            body: JSON.stringify({ ...book, activityDate: getLocalDateString() }),
         });
     },
 
     async updateBook(id: string, updates: Partial<Book>): Promise<Book> {
         return apiFetch<Book>(`/api/books/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(updates),
+            body: JSON.stringify({ ...updates, activityDate: getLocalDateString() }),
         });
     },
 
@@ -180,7 +181,7 @@ export const api = {
         }
 
         // If backend couldn't get a cover (e.g. Google Books server quota), try directly from browser
-        if(!result.coverUrl) {
+        if (!result.coverUrl) {
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 4500);
@@ -190,10 +191,10 @@ export const api = {
                 );
                 clearTimeout(timeout);
 
-                if(resp.ok) {
+                if (resp.ok) {
                     const data = await resp.json();
                     const info = data.items?.[0]?.volumeInfo;
-                    if(info) {
+                    if (info) {
                         const rawCover =
                             info.imageLinks?.extraLarge ||
                             info.imageLinks?.large ||
