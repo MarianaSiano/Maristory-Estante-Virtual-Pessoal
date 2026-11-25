@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Book, ReadingStatus, OwnershipStatus } from '../types';
+import { Book, ReadingStatus, OwnershipStatus, ReadingDayEntry } from '../types';
 import { BookCover } from './BookCover';
+import { WeeklyReadingTracker } from './WeeklyReadingTracker';
+import { MonthlyReadingTracker } from './MonthlyReadingTracker';
 import {
     Search,
     Filter,
@@ -25,6 +27,7 @@ import {
 interface BookshelfViewProps {
     books: Book[];
     readingGoal?: number;
+    readingDays?: Record<string, ReadingDayEntry>;
     onOpenBookDetail: (book: Book) => void;
     onOpenAddBook: () => void;
     onEditBook: (book: Book) => void;
@@ -36,6 +39,7 @@ interface BookshelfViewProps {
 export const BookshelfView: React.FC<BookshelfViewProps> = ({
     books,
     readingGoal = 24,
+    readingDays = {},
     onOpenBookDetail,
     onOpenAddBook,
     onEditBook,
@@ -56,22 +60,22 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
     // Filtering
     const filteredBooks = books.filter((book) => {
         // Search query
-        const q = search.toLocaleLowerCase().trim();
+        const q = search.toLowerCase().trim();
         const matchesSearch =
             !q ||
-            book.title.toLocaleLowerCase().includes(q) ||
-            book.author.toLocaleLowerCase().includes(q) ||
-            book.publisher.toLocaleLowerCase().includes(q) ||
-            book.genre.toLocaleLowerCase().includes(q) ||
+            book.title.toLowerCase().includes(q) ||
+            book.author.toLowerCase().includes(q) ||
+            book.publisher.toLowerCase().includes(q) ||
+            book.genre.toLowerCase().includes(q) ||
             book.isbn.includes(q);
 
         if(!matchesSearch) return false;
 
-        //status Filter
+        // Status Filter
         if(filterStatus === 'FAVORITES') {
             if(!book.isFavorite) return false;
         } else if(filterStatus === 'FISICO') {
-            if(book.ownershipStatus !== 'TENHO') return;
+            if(book.ownershipStatus !== 'TENHO') return false;
         } else if(filterStatus !== 'ALL') {
             if(book.readingStatus !== filterStatus) return false;
         }
@@ -228,6 +232,12 @@ export const BookshelfView: React.FC<BookshelfViewProps> = ({
                     </div>
                 </div>
             </div>
+
+            {/* Controle Semanal: Dias da Semana */}
+            <WeeklyReadingTracker readingDays={readingDays} />
+
+            {/* Controle Mensal: Hábito de Leitura Mensal */}
+            <MonthlyReadingTracker readingDays={readingDays} />
 
             {/* Control Bar: Tabs, Search, Filters and Layout Selector */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
